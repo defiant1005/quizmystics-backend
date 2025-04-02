@@ -28,6 +28,7 @@ export default [
       'no-console': 'off',
       '@typescript-eslint/no-var-requires': 'off',
       'unused-imports/no-unused-imports': 'warn',
+      '@typescript-eslint/no-explicit-any': 'off',
     },
   },
 ];
