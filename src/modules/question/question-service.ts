@@ -15,13 +15,17 @@ export const getQuestionById = async (id: number) => {
 
 export const updateQuestion = async (id: number, data: IQuestionCreate) => {
   const question = await Question.findByPk(id);
-  if (!question) return null;
+  if (!question) {
+    throw new Error('Вопрос не найден');
+  }
   return await question.update(data);
 };
 
 export const deleteQuestion = async (id: number) => {
   const question = await Question.findByPk(id);
-  if (!question) return null;
+  if (!question) {
+    throw new Error('Вопрос не найден');
+  }
   await question.destroy();
   return question;
 };

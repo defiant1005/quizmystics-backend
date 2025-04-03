@@ -15,13 +15,17 @@ export const getCategoryById = async (id: number) => {
 
 export const updateCategory = async (id: number, data: ICategoryCreate) => {
   const category = await Category.findByPk(id);
-  if (!category) return null;
+  if (!category) {
+    throw new Error('Категория не найдена');
+  }
   return await category.update(data);
 };
 
 export const deleteCategory = async (id: number) => {
   const category = await Category.findByPk(id);
-  if (!category) return null;
+  if (!category) {
+    throw new Error('Категория не найдена');
+  }
   await category.destroy();
   return category;
 };
