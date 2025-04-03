@@ -11,7 +11,7 @@ import { validateQuestion } from './validations.js';
 export const questionRouter = Router();
 
 questionRouter.get('/', getAllQuestionsHandler);
-questionRouter.get('/:id', getQuestionByIdHandler as any);
+questionRouter.get('/:id', getQuestionByIdHandler);
 
 questionRouter.post('/', validateQuestion, createQuestionHandler);
 

@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import {
   createQuestion,
   getAllQuestions,
@@ -28,13 +28,20 @@ export const getAllQuestionsHandler = async (_req: Request, res: Response) => {
   }
 };
 
-export const getQuestionByIdHandler = async (req: Request, res: Response) => {
+export const getQuestionByIdHandler = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const question = await getQuestionById(Number(req.params.id));
-    if (!question) return res.status(404).json({ error: 'Вопрос не найден' });
-    res.json(question);
+
+    if (!question) {
+      res.status(404).json({ error: 'Вопрос не найден' });
+    } else {
+      res.json(question);
+    }
+
+    next();
   } catch (error) {
-    res.status(500).json({ error: 'Ошибка при получении вопроса' });
+    const errorMessage = errorHandler(error);
+    res.status(500).json({ error: `Ошибка при получении вопроса: ${errorMessage}` });
   }
 };
 

@@ -1,6 +1,7 @@
 import { Question } from './question-db-model.js';
+import { IQuestionCreate } from './types.js';
 
-export const createQuestion = async (data: any) => {
+export const createQuestion = async (data: IQuestionCreate) => {
   return await Question.create(data);
 };
 
@@ -12,7 +13,7 @@ export const getQuestionById = async (id: number) => {
   return await Question.findByPk(id);
 };
 
-export const updateQuestion = async (id: number, data: any) => {
+export const updateQuestion = async (id: number, data: IQuestionCreate) => {
   const question = await Question.findByPk(id);
   if (!question) return null;
   return await question.update(data);

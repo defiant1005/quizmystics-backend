@@ -3,3 +3,8 @@ export interface IResponseError {
     message: string;
   };
 }
+
+export interface IZodError {
+  field: string;
+  message: string;
+}
