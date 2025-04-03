@@ -7,24 +7,25 @@ import {
   getCategoryById,
   updateCategory,
 } from './category-service.js';
+import { ApiError } from '../../error/ApiError.js';
 
-export const createCategoryHandler = async (req: Request, res: Response) => {
+export const createCategoryHandler = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const category = await createCategory(req.body);
     res.status(201).json(category);
   } catch (error) {
     const errorMessage = errorHandler(error);
-    res.status(500).json({ error: `Ошибка при создании вопроса ${errorMessage}` });
+    next(ApiError.internal(`Ошибка при создании категории ${errorMessage}`));
   }
 };
 
-export const getAllCategoriesHandler = async (_req: Request, res: Response) => {
+export const getAllCategoriesHandler = async (_req: Request, res: Response, next: NextFunction) => {
   try {
     const categories = await getAllCategories();
     res.json(categories);
   } catch (error) {
     const errorMessage = errorHandler(error);
-    res.status(500).json({ error: `Ошибка при получении вопросов ${errorMessage}` });
+    next(ApiError.internal(`Ошибка при получении категории ${errorMessage}`));
   }
 };
 
@@ -33,7 +34,7 @@ export const getCategoryByIdHandler = async (req: Request, res: Response, next: 
     const category = await getCategoryById(Number(req.params.id));
 
     if (!category) {
-      res.status(404).json({ error: 'Вопрос не найден' });
+      next(ApiError.badRequest('Категория не найдена'));
     } else {
       res.json(category);
     }
@@ -41,30 +42,34 @@ export const getCategoryByIdHandler = async (req: Request, res: Response, next: 
     next();
   } catch (error) {
     const errorMessage = errorHandler(error);
-    res.status(500).json({ error: `Ошибка при получении вопроса: ${errorMessage}` });
+    next(ApiError.internal(`Ошибка при получении категории ${errorMessage}`));
   }
 };
 
-export const updateCategoryHandler = async (req: Request, res: Response) => {
+export const updateCategoryHandler = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const category = await updateCategory(Number(req.params.id), req.body);
-    if (!category) return res.status(404).json({ error: 'Вопрос не найден' });
+    if (!category) {
+      next(ApiError.badRequest('Категория не найдена'));
+    }
     res.json(category);
   } catch (error) {
     const errorMessage = errorHandler(error);
-
-    res.status(500).json({ error: `Ошибка при обновлении вопроса ${errorMessage}` });
+    next(ApiError.internal(`Ошибка при получении категории ${errorMessage}`));
   }
 };
 
-export const deleteCategoryHandler = async (req: Request, res: Response) => {
+export const deleteCategoryHandler = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const category = await deleteCategory(Number(req.params.id));
-    if (!category) return res.status(404).json({ error: 'Вопрос не найден' });
+    if (!category) {
+      next(ApiError.badRequest('Категория не найдена'));
+    }
+
     res.json({ message: 'Вопрос удален' });
   } catch (error) {
     const errorMessage = errorHandler(error);
 
-    res.status(500).json({ error: `Ошибка при удалении вопроса ${errorMessage}` });
+    next(ApiError.internal(`Ошибка при удалении категории ${errorMessage}`));
   }
 };

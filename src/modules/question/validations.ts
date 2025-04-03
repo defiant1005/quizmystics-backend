@@ -12,7 +12,7 @@ const questionSchema = z.object({
   correct_answer: z.enum(['answer1', 'answer2', 'answer3', 'answer4'], {
     message: 'Выберите правильный ответ должен быть одним из четырх answer',
   }),
-  category_id: z.number().positive(),
+  categoryId: z.number().positive(),
 });
 
 export const validateQuestion = (req: Request, res: Response, next: NextFunction) => {

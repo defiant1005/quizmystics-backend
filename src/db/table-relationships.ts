@@ -3,8 +3,8 @@ import { Category } from '../modules/category/category-db-model.js';
 import { Ability, Character, CharacterClass, CharacterClassAbility } from '../modules/character/character-db-model.js';
 
 export const tableRelationship = () => {
-  Question.hasOne(Category);
-  Category.belongsTo(Question);
+  Category.hasOne(Question);
+  Question.belongsTo(Category);
 
   CharacterClass.hasMany(Character);
   Character.belongsTo(CharacterClass);

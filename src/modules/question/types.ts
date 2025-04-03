@@ -7,6 +7,7 @@ export enum AnswerVariant {
 
 export interface IQuestion {
   id: number;
+  categoryId: number;
   title: string;
   [AnswerVariant.ANSWER1]: string;
   [AnswerVariant.ANSWER2]: string;
@@ -15,4 +16,4 @@ export interface IQuestion {
   correct_answer: AnswerVariant;
 }
 
-export interface IQuestionCreate extends Omit<IQuestion, 'id'> {}
+export interface IQuestionCreate extends Omit<IQuestion, 'id' | 'categoryId'> {}

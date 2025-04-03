@@ -1,19 +1,20 @@
 import { Router } from 'express';
 import {
-  createQuestionHandler,
-  getAllQuestionsHandler,
-  getQuestionByIdHandler,
-  updateQuestionHandler,
-  deleteQuestionHandler,
-} from './question-controller.js';
-import { validateQuestion } from './validations.js';
+  createCategoryHandler,
+  deleteCategoryHandler,
+  getAllCategoriesHandler,
+  getCategoryByIdHandler,
+  updateCategoryHandler,
+} from './category-controller.js';
+
+import { validateCategory } from './validations.js';
 
 export const categoryRouter = Router();
 
-categoryRouter.get('/', getAllQuestionsHandler);
-categoryRouter.get('/:id', getQuestionByIdHandler);
+categoryRouter.get('/', getAllCategoriesHandler);
+categoryRouter.get('/:id', getCategoryByIdHandler);
 
-categoryRouter.post('/', validateQuestion, createQuestionHandler);
+categoryRouter.post('/', validateCategory, createCategoryHandler);
 
-categoryRouter.put('/:id', updateQuestionHandler as any);
-categoryRouter.delete('/:id', deleteQuestionHandler as any);
+categoryRouter.put('/:id', validateCategory, updateCategoryHandler);
+categoryRouter.delete('/:id', deleteCategoryHandler);
