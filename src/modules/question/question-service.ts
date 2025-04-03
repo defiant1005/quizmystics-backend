@@ -1,4 +1,4 @@
-import Question from './questions-db-model.js';
+import { Question } from './question-db-model.js';
 
 export const createQuestion = async (data: any) => {
   return await Question.create(data);

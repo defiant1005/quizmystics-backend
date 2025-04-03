@@ -1,11 +1,13 @@
-import { DataTypes, Model } from 'sequelize';
 import { sequelize } from '../../db/sequelize.js';
+import { DataTypes } from 'sequelize';
 
-class Question extends Model {}
-
-const questionFields = {
-  id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-  title: { type: DataTypes.STRING, allowNull: false },
+export const Question = sequelize.define('question', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
+  title: { type: DataTypes.STRING, allowNull: false, unique: true },
   answer1: { type: DataTypes.STRING, allowNull: false },
   answer2: { type: DataTypes.STRING, allowNull: false },
   answer3: { type: DataTypes.STRING, allowNull: false },
@@ -20,15 +22,4 @@ const questionFields = {
       },
     },
   },
-};
-
-const questionOptions = {
-  sequelize,
-  modelName: 'Question',
-  tableName: 'questions',
-  timestamps: true,
-};
-
-Question.init(questionFields, questionOptions);
-
-export default Question;
+});

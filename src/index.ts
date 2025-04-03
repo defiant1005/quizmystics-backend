@@ -13,19 +13,17 @@ app.use(express.json());
 
 app.use('/api/questions', questionRoutes);
 
-(async () => {
+const start = async () => {
   try {
     await initDB();
+
+    app.listen(port, () => {
+      logger.info(`✅ Сервер запущен на порту ${port}`);
+    });
   } catch (error) {
     logger.error('❌ Database initialization failed:', error);
     process.exit(1);
   }
-})();
+};
 
-app.get('/', (req, res) => {
-  res.send('Hello, world!');
-});
-
-app.listen(port, () => {
-  logger.info(`✅ Сервер запущен на порту ${port}`);
-});
+start().then();
