@@ -17,4 +17,8 @@ export class ApiError extends Error {
   static forbidden(message: string): ApiError {
     return new ApiError(403, message);
   }
+
+  static internal(message: string): ApiError {
+    return new ApiError(500, message);
+  }
 }

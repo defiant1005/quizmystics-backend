@@ -15,5 +15,5 @@ questionRouter.get('/:id', getQuestionByIdHandler);
 
 questionRouter.post('/', validateQuestion, createQuestionHandler);
 
-questionRouter.put('/:id', updateQuestionHandler as any);
-questionRouter.delete('/:id', deleteQuestionHandler as any);
+questionRouter.put('/:id', updateQuestionHandler);
+questionRouter.delete('/:id', deleteQuestionHandler);
