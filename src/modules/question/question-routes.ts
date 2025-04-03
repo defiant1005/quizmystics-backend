@@ -8,12 +8,12 @@ import {
 } from './question-controller.js';
 import { validateQuestion } from './validations.js';
 
-const router = Router();
+export const questionRouter = Router();
 
-router.post('/questions', validateQuestion, createQuestionHandler);
-router.get('/', getAllQuestionsHandler);
-router.get('/:id', getQuestionByIdHandler as any);
-router.put('/:id', updateQuestionHandler as any);
-router.delete('/:id', deleteQuestionHandler as any);
+questionRouter.get('/', getAllQuestionsHandler);
+questionRouter.get('/:id', getQuestionByIdHandler as any);
 
-export default router;
+questionRouter.post('/', validateQuestion, createQuestionHandler);
+
+questionRouter.put('/:id', updateQuestionHandler as any);
+questionRouter.delete('/:id', deleteQuestionHandler as any);

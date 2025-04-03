@@ -6,7 +6,7 @@ import {
   updateQuestion,
   deleteQuestion,
 } from './question-service.js';
-import { errorHandler } from '../../helpers/error-handler.js';
+import { errorHandler } from '../../error/error-handler.js';
 
 export const createQuestionHandler = async (req: Request, res: Response) => {
   try {
