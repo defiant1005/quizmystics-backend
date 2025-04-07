@@ -28,9 +28,9 @@ export default [
       'no-console': 'off',
       '@typescript-eslint/no-var-requires': 'off',
       'unused-imports/no-unused-imports': 'warn',
-      '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unused-vars': 'warn',
       '@typescript-eslint/no-empty-object-type': 'warn',
+      '@typescript-eslint/ban-ts-comment': 'warn',
     },
   },
 ];

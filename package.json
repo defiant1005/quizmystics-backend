@@ -9,7 +9,8 @@
     "start": "npm run dist && node dist/main",
     "build": "rimraf ./dist && npx tsc",
     "lint": "eslint src --fix",
-    "format": "npx eslint ./src --fix"
+    "format": "npx eslint ./src --fix",
+    "type-check": "tsc --noEmit"
   },
   "keywords": [
     "node",
@@ -21,6 +22,7 @@
     "@types/bcrypt": "^5.0.2",
     "@types/bcryptjs": "^3.0.0",
     "@types/config": "^3.3.5",
+    "@types/cookie-parser": "^1.4.8",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
     "@types/jsonwebtoken": "^9.0.9",
@@ -45,6 +47,7 @@
     "bcrypt": "^5.1.1",
     "bcryptjs": "^3.0.2",
     "config": "^3.3.12",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "eslint-plugin-unused-imports": "^4.1.4",
@@ -53,6 +56,7 @@
     "pg": "^8.14.1",
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.37.7",
+    "uuid": "^11.1.0",
     "winston": "^3.17.0",
     "zod": "^3.24.2"
   }

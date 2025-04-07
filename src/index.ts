@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import { logger } from './utils/logger.js';
 import { initDB } from './db/init.js';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import { router } from './package/router.js';
 import { errorHandlerMiddleware } from './error/ErrorHandlerMiddleware.js';
 
@@ -12,6 +13,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
+app.use(cookieParser());
 app.use(cors());
 
 app.use('/api', router);
