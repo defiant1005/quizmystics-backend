@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { createAdmin, findAdminByEmail, findAdminById } from './admin-service.js';
+import { createAdmin, findAdminByEmail, findAdminById, findAllAdmins } from './admin-service.js';
 import { errorHandler } from '../../error/error-handler.js';
 import { ApiError } from '../../error/ApiError.js';
 import bcrypt from 'bcrypt';
@@ -120,6 +120,21 @@ export const refreshTokenHandler = async (req: Request, res: Response, next: Nex
       data: {
         ...tokens,
         user: adminClientData,
+      },
+    });
+  } catch (error) {
+    const errorMessage = errorHandler(error);
+    next(ApiError.internal(`Ошибка при создании админа ${errorMessage}`));
+  }
+};
+
+export const getAdminsHandler = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const admins = await findAllAdmins();
+
+    res.json({
+      data: {
+        admins: admins,
       },
     });
   } catch (error) {

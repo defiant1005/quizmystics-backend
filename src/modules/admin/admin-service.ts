@@ -12,3 +12,7 @@ export const findAdminByEmail = async (email: string) => {
 export const findAdminById = async (id: number) => {
   return await Admin.findOne({ where: { id: id } });
 };
+
+export const findAllAdmins = async () => {
+  return await Admin.findAll();
+};
