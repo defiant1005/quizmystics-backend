@@ -5,6 +5,10 @@ export const createAdmin = async (data: IAdminCreationAttributes) => {
   return await Admin.create(data);
 };
 
-export const findAdmin = async (email: string) => {
+export const findAdminByEmail = async (email: string) => {
   return await Admin.findOne({ where: { email: email } });
+};
+
+export const findAdminById = async (id: number) => {
+  return await Admin.findOne({ where: { id: id } });
 };

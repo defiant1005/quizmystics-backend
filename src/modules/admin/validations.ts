@@ -15,7 +15,7 @@ const loginAdminSchema = z.object({
   password: z.string().min(8, 'Не менее 8 символов'),
 });
 
-const logoutAdminSchema = z.object({
+const isHasRefresh = z.object({
   refreshToken: z.string(),
 });
 
@@ -47,9 +47,9 @@ export const validateLoginAdmin = (req: Request, res: Response, next: NextFuncti
   }
 };
 
-export const validateLogoutAdmin = (req: Request, res: Response, next: NextFunction) => {
+export const validateIsHasRefresh = (req: Request, res: Response, next: NextFunction) => {
   try {
-    req.body = logoutAdminSchema.parse(req.body);
+    req.body = isHasRefresh.parse(req.body);
     next();
   } catch (error: unknown) {
     if (error instanceof ZodError) {
