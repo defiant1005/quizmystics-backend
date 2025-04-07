@@ -5,7 +5,7 @@ import { initDB } from './db/init.js';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { router } from './package/router.js';
-import { errorHandlerMiddleware } from './error/ErrorHandlerMiddleware.js';
+import { errorMiddleware } from './middleware/error-middleware.js';
 
 dotenv.config();
 
@@ -19,7 +19,7 @@ app.use(cors());
 app.use('/api', router);
 
 //последний
-app.use(errorHandlerMiddleware);
+app.use(errorMiddleware);
 
 const start = async () => {
   try {

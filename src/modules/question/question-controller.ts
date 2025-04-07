@@ -15,7 +15,7 @@ export const createQuestionHandler = async (req: Request, res: Response, next: N
     res.status(201).json(question);
   } catch (error) {
     const errorMessage = errorHandler(error);
-    next(ApiError.internal(`Ошибка при создании вопроса ${errorMessage}`));
+    next(ApiError.Internal(`Ошибка при создании вопроса ${errorMessage}`));
   }
 };
 
@@ -25,7 +25,7 @@ export const getAllQuestionsHandler = async (_req: Request, res: Response, next:
     res.json(questions);
   } catch (error) {
     const errorMessage = errorHandler(error);
-    next(ApiError.internal(`${errorMessage}`));
+    next(ApiError.Internal(`${errorMessage}`));
   }
 };
 
@@ -34,7 +34,7 @@ export const getQuestionByIdHandler = async (req: Request, res: Response, next: 
     const question = await getQuestionById(Number(req.params.id));
 
     if (!question) {
-      next(ApiError.badRequest(`Вопрос не найден`));
+      next(ApiError.BadRequest(`Вопрос не найден`));
     } else {
       res.json(question);
     }
@@ -42,7 +42,7 @@ export const getQuestionByIdHandler = async (req: Request, res: Response, next: 
     next();
   } catch (error) {
     const errorMessage = errorHandler(error);
-    next(ApiError.internal(`Ошибка при получении вопроса: ${errorMessage}`));
+    next(ApiError.Internal(`Ошибка при получении вопроса: ${errorMessage}`));
   }
 };
 
@@ -50,14 +50,14 @@ export const updateQuestionHandler = async (req: Request, res: Response, next: N
   try {
     const question = await updateQuestion(Number(req.params.id), req.body);
     if (!question) {
-      next(ApiError.badRequest('Вопрос не найден'));
+      next(ApiError.BadRequest('Вопрос не найден'));
     } else {
       res.json(question);
     }
   } catch (error) {
     const errorMessage = errorHandler(error);
 
-    next(ApiError.internal(`Ошибка при обновлении вопроса ${errorMessage}`));
+    next(ApiError.Internal(`Ошибка при обновлении вопроса ${errorMessage}`));
   }
 };
 
@@ -65,13 +65,13 @@ export const deleteQuestionHandler = async (req: Request, res: Response, next: N
   try {
     const question = await deleteQuestion(Number(req.params.id));
     if (!question) {
-      next(ApiError.badRequest('Вопрос не найден'));
+      next(ApiError.BadRequest('Вопрос не найден'));
     } else {
       res.json({ message: 'Вопрос удален' });
     }
   } catch (error) {
     const errorMessage = errorHandler(error);
 
-    next(ApiError.internal(`Ошибка при удалении вопроса ${errorMessage}`));
+    next(ApiError.Internal(`Ошибка при удалении вопроса ${errorMessage}`));
   }
 };

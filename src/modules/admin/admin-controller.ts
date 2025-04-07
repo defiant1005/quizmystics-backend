@@ -14,7 +14,7 @@ export const createAdminHandler = async (req: Request, res: Response, next: Next
     const candidate = await findAdminByEmail(email);
 
     if (candidate) {
-      next(ApiError.badRequest('Админ с таким email уже существует'));
+      next(ApiError.BadRequest('Админ с таким email уже существует'));
     }
 
     const hashPassword = await bcrypt.hash(password, 3);
@@ -34,7 +34,7 @@ export const createAdminHandler = async (req: Request, res: Response, next: Next
     });
   } catch (error) {
     const errorMessage = errorHandler(error);
-    next(ApiError.internal(`Ошибка при создании админа ${errorMessage}`));
+    next(ApiError.Internal(`Ошибка при создании админа ${errorMessage}`));
   }
 };
 
@@ -45,13 +45,13 @@ export const loginAdminHandler = async (req: Request, res: Response, next: NextF
     const admin = await findAdminByEmail(email);
 
     if (!admin) {
-      return next(ApiError.badRequest('Неверный email или пароль'));
+      return next(ApiError.BadRequest('Неверный email или пароль'));
     }
 
     const isPassEquals = await bcrypt.compare(password, admin.password);
 
     if (!isPassEquals) {
-      next(ApiError.badRequest('Неверный email или пароль'));
+      next(ApiError.BadRequest('Неверный email или пароль'));
     }
 
     const adminClientData = adminDto(admin);
@@ -67,7 +67,7 @@ export const loginAdminHandler = async (req: Request, res: Response, next: NextF
     });
   } catch (error) {
     const errorMessage = errorHandler(error);
-    next(ApiError.internal(`Ошибка при создании админа ${errorMessage}`));
+    next(ApiError.Internal(`Ошибка при создании админа ${errorMessage}`));
   }
 };
 
@@ -78,7 +78,7 @@ export const logoutHandler = async (req: Request, res: Response, next: NextFunct
     const refresh = await findRefreshToken(refreshToken);
 
     if (!refresh) {
-      return next(ApiError.internal('Пользователь не найден'));
+      return next(ApiError.Internal('Пользователь не найден'));
     }
 
     await removeRefreshToken(refreshToken);
@@ -88,7 +88,7 @@ export const logoutHandler = async (req: Request, res: Response, next: NextFunct
     });
   } catch (error) {
     const errorMessage = errorHandler(error);
-    next(ApiError.internal(`Ошибка при создании админа ${errorMessage}`));
+    next(ApiError.Internal(`Ошибка при создании админа ${errorMessage}`));
   }
 };
 
@@ -99,14 +99,14 @@ export const refreshTokenHandler = async (req: Request, res: Response, next: Nex
     const refresh = await findRefreshToken(refreshToken);
 
     if (!refresh) {
-      return next(ApiError.forbidden('Пользователь не найден'));
+      return next(ApiError.Unauthorized('Пользователь не найден'));
     }
 
     const userData = validateRefreshToken(refreshToken);
     const tokenFromDb = await findRefreshToken(refreshToken);
 
     if (!userData || !tokenFromDb) {
-      return next(ApiError.forbidden('Пользователь не найден'));
+      return next(ApiError.Unauthorized('Пользователь не найден'));
     }
 
     const admin = await findAdminById(userData.id);
@@ -124,7 +124,7 @@ export const refreshTokenHandler = async (req: Request, res: Response, next: Nex
     });
   } catch (error) {
     const errorMessage = errorHandler(error);
-    next(ApiError.internal(`Ошибка при создании админа ${errorMessage}`));
+    next(ApiError.Internal(`Ошибка при создании админа ${errorMessage}`));
   }
 };
 
@@ -139,6 +139,6 @@ export const getAdminsHandler = async (req: Request, res: Response, next: NextFu
     });
   } catch (error) {
     const errorMessage = errorHandler(error);
-    next(ApiError.internal(`Ошибка при создании админа ${errorMessage}`));
+    next(ApiError.Internal(`Ошибка при создании админа ${errorMessage}`));
   }
 };

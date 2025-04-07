@@ -14,7 +14,7 @@ export const validateCategory = (req: Request, res: Response, next: NextFunction
   } catch (error: unknown) {
     if (error instanceof ZodError) {
       const errors = mapZodErrors(error);
-      next(ApiError.badRequest(JSON.stringify(errors)));
+      next(ApiError.BadRequest(JSON.stringify(errors)));
     } else {
       next(error);
     }

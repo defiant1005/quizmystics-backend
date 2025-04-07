@@ -10,15 +10,15 @@ export class ApiError extends Error {
     Object.setPrototypeOf(this, ApiError.prototype);
   }
 
-  static badRequest(message: string): ApiError {
+  static BadRequest(message: string): ApiError {
     return new ApiError(404, message);
   }
 
-  static forbidden(message: string): ApiError {
+  static Unauthorized(message: string): ApiError {
     return new ApiError(403, message);
   }
 
-  static internal(message: string): ApiError {
+  static Internal(message: string): ApiError {
     return new ApiError(500, message);
   }
 }
