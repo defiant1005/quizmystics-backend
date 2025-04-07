@@ -1,11 +1,11 @@
 import { Router } from 'express';
-import { createAdminHandler } from './admin-controller.js';
-import { validateAdmin } from './validations.js';
+import { createAdminHandler, loginAdminHandler } from './admin-controller.js';
+import { validateCreateAdmin, validateLoginAdmin } from './validations.js';
 
 export const adminRouter = Router();
 
-adminRouter.post('/registration', validateAdmin, createAdminHandler);
+adminRouter.post('/registration', validateCreateAdmin, createAdminHandler);
 
-// adminRouter.post('/login', login);
+adminRouter.post('/login', validateLoginAdmin, loginAdminHandler);
 //
 // adminRouter.get('/auth', auth);

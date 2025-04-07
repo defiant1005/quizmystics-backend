@@ -4,15 +4,35 @@ import { z, ZodError } from 'zod';
 import { mapZodErrors } from '../../error/error-handler.js';
 import { AdminRole } from './types.js';
 
-const adminSchema = z.object({
+const createAdminSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8, 'Не менее 8 символов'),
   role: z.nativeEnum(AdminRole),
 });
 
-export const validateAdmin = (req: Request, res: Response, next: NextFunction) => {
+const loginAdminSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8, 'Не менее 8 символов'),
+  role: z.nativeEnum(AdminRole),
+});
+
+export const validateCreateAdmin = (req: Request, res: Response, next: NextFunction) => {
   try {
-    req.body = adminSchema.parse(req.body);
+    req.body = createAdminSchema.parse(req.body);
+    next();
+  } catch (error: unknown) {
+    if (error instanceof ZodError) {
+      const errors = mapZodErrors(error);
+      next(ApiError.badRequest(JSON.stringify(errors)));
+    } else {
+      next(error);
+    }
+  }
+};
+
+export const validateLoginAdmin = (req: Request, res: Response, next: NextFunction) => {
+  try {
+    req.body = loginAdminSchema.parse(req.body);
     next();
   } catch (error: unknown) {
     if (error instanceof ZodError) {
