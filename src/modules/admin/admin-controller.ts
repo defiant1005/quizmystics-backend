@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { createAdmin, findAdminByEmail, findAdminById, findAllAdmins } from './admin-service.js';
+import { createAdmin, findAdminByEmail, findAdminById, findAllAdmins, removeAdmin } from './admin-service.js';
 import { errorHandler } from '../../error/error-handler.js';
 import { ApiError } from '../../error/ApiError.js';
 import bcrypt from 'bcrypt';
@@ -136,6 +136,26 @@ export const getAdminsHandler = async (req: Request, res: Response, next: NextFu
       data: {
         admins: admins,
       },
+    });
+  } catch (error) {
+    const errorMessage = errorHandler(error);
+    next(ApiError.Internal(`Ошибка при создании админа ${errorMessage}`));
+  }
+};
+
+export const removeAdminHandler = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = req.params.id;
+    const numId = Number(id);
+
+    if (!id || isNaN(numId)) {
+      return next(ApiError.BadRequest('Пользователь не найден'));
+    }
+
+    await removeAdmin(numId);
+
+    res.json({
+      message: 'ok',
     });
   } catch (error) {
     const errorMessage = errorHandler(error);

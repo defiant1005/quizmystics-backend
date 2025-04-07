@@ -16,3 +16,7 @@ export const findAdminById = async (id: number) => {
 export const findAllAdmins = async () => {
   return await Admin.findAll();
 };
+
+export const removeAdmin = async (id: number) => {
+  return await Admin.destroy({ where: { id: id } });
+};
