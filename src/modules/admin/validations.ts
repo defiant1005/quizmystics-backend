@@ -13,7 +13,10 @@ const createAdminSchema = z.object({
 const loginAdminSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8, 'Не менее 8 символов'),
-  role: z.nativeEnum(AdminRole),
+});
+
+const logoutAdminSchema = z.object({
+  refreshToken: z.string(),
 });
 
 export const validateCreateAdmin = (req: Request, res: Response, next: NextFunction) => {
@@ -33,6 +36,20 @@ export const validateCreateAdmin = (req: Request, res: Response, next: NextFunct
 export const validateLoginAdmin = (req: Request, res: Response, next: NextFunction) => {
   try {
     req.body = loginAdminSchema.parse(req.body);
+    next();
+  } catch (error: unknown) {
+    if (error instanceof ZodError) {
+      const errors = mapZodErrors(error);
+      next(ApiError.badRequest(JSON.stringify(errors)));
+    } else {
+      next(error);
+    }
+  }
+};
+
+export const validateLogoutAdmin = (req: Request, res: Response, next: NextFunction) => {
+  try {
+    req.body = logoutAdminSchema.parse(req.body);
     next();
   } catch (error: unknown) {
     if (error instanceof ZodError) {

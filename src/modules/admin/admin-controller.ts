@@ -3,7 +3,7 @@ import { createAdmin, findAdmin } from './admin-service.js';
 import { errorHandler } from '../../error/error-handler.js';
 import { ApiError } from '../../error/ApiError.js';
 import bcrypt from 'bcrypt';
-import { generateTokens, saveToken } from '../jwt/jwt-service.js';
+import { findRefreshToken, generateTokens, removeRefreshToken, saveToken } from '../jwt/jwt-service.js';
 import { adminDto } from './admin-dto.js';
 
 export const createAdminHandler = async (req: Request, res: Response, next: NextFunction) => {
@@ -63,6 +63,28 @@ export const loginAdminHandler = async (req: Request, res: Response, next: NextF
         ...tokens,
         user: adminClientData,
       },
+    });
+  } catch (error) {
+    const errorMessage = errorHandler(error);
+    next(ApiError.internal(`Ошибка при создании админа ${errorMessage}`));
+  }
+};
+
+export const logoutHandler = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { refreshToken } = req.body;
+
+    const refresh = await findRefreshToken(refreshToken);
+
+    if (!refresh) {
+      return next(ApiError.internal('Пользователь не найден'));
+    }
+
+    await removeRefreshToken(refreshToken);
+
+    res.json({
+      message: 'ok',
+      refresh: refresh,
     });
   } catch (error) {
     const errorMessage = errorHandler(error);

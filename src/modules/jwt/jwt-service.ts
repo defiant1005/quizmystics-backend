@@ -19,3 +19,11 @@ export async function saveToken(adminId: number, refreshToken: string) {
 
   return await JWTTokens.create({ userId: adminId, refreshToken });
 }
+
+export const findRefreshToken = async (refreshToken: string) => {
+  return await JWTTokens.findOne({ where: { refreshToken: refreshToken } });
+};
+
+export const removeRefreshToken = async (refreshToken: string) => {
+  return await JWTTokens.destroy({ where: { refreshToken } });
+};
