@@ -3,7 +3,7 @@ import { JWTTokens } from './jwt-db-model.js';
 import { IAdminClientData } from '../admin/types.js';
 
 export function generateTokens(payload: IAdminClientData) {
-  const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET as string, { expiresIn: '60m' });
+  const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET as string, { expiresIn: '1d' });
   const refreshToken = jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET as string, { expiresIn: '30d' });
 
   return { accessToken, refreshToken };

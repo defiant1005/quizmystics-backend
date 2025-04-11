@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   createAdminHandler,
   getAdminsHandler,
+  getMeHandler,
   loginAdminHandler,
   logoutHandler,
   refreshTokenHandler,
@@ -22,5 +23,7 @@ adminRouter.post('/logout', validateIsHasRefresh, logoutHandler);
 adminRouter.post('/refresh', validateIsHasRefresh, refreshTokenHandler);
 
 adminRouter.get('/admins', authMiddleware, getAdminsHandler);
+
+adminRouter.get('/me', authMiddleware, getMeHandler);
 
 adminRouter.delete('/admins/:id', superAdminMiddleware, removeAdminHandler);

@@ -133,9 +133,9 @@ export const getAdminsHandler = async (req: Request, res: Response, next: NextFu
     const admins = await findAllAdmins();
 
     res.json({
-      data: {
-        admins: admins,
-      },
+      data: admins.map((admin) => {
+        return adminDto(admin);
+      }),
     });
   } catch (error) {
     const errorMessage = errorHandler(error);
@@ -160,5 +160,30 @@ export const removeAdminHandler = async (req: Request, res: Response, next: Next
   } catch (error) {
     const errorMessage = errorHandler(error);
     next(ApiError.Internal(`Ошибка при создании админа ${errorMessage}`));
+  }
+};
+
+export const getMeHandler = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (req.user === null) {
+      next(ApiError.Internal('Админ не найден'));
+      return;
+    }
+
+    const adminModel = await findAdminById(req.user.id);
+
+    if (adminModel === null) {
+      next(ApiError.Internal('Админ не найден'));
+      return;
+    }
+
+    const admin = adminDto(adminModel);
+
+    res.json({
+      data: admin,
+    });
+  } catch (error) {
+    const errorMessage = errorHandler(error);
+    next(ApiError.Internal(`Ошибка получении данных ${errorMessage}`));
   }
 };

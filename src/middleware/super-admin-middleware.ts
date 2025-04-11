@@ -1,13 +1,9 @@
-import { NextFunction, Request, Response } from 'express';
+import { NextFunction, Response, Request } from 'express';
 import { ApiError } from '../error/ApiError.js';
 import { validateAccessToken } from '../modules/jwt/jwt-validate.js';
-import { AdminRole, IAdminClientData } from '../modules/admin/types.js';
+import { AdminRole } from '../modules/admin/types.js';
 
-interface AuthenticatedRequest extends Request {
-  user?: IAdminClientData;
-}
-
-export function superAdminMiddleware(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
+export function superAdminMiddleware(req: Request, res: Response, next: NextFunction): void {
   try {
     const authorizationHeader = req.headers.authorization;
     if (!authorizationHeader) {
