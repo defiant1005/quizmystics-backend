@@ -41,7 +41,9 @@ export const getCategoryByIdHandler = async (req: Request, res: Response, next: 
     if (!category) {
       next(ApiError.BadRequest('Категория не найдена'));
     } else {
-      res.json(category);
+      res.json({
+        data: category,
+      });
     }
 
     next();
