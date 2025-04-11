@@ -8,6 +8,7 @@ import {
   updateCategory,
 } from './category-service.js';
 import { ApiError } from '../../error/ApiError.js';
+import { categoryDto } from './category-dto.js';
 
 export const createCategoryHandler = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -22,7 +23,11 @@ export const createCategoryHandler = async (req: Request, res: Response, next: N
 export const getAllCategoriesHandler = async (_req: Request, res: Response, next: NextFunction) => {
   try {
     const categories = await getAllCategories();
-    res.json(categories);
+    const dtoCategories = categories.map((category) => categoryDto(category));
+
+    res.json({
+      data: dtoCategories,
+    });
   } catch (error) {
     const errorMessage = errorHandler(error);
     next(ApiError.Internal(`Ошибка при получении категории ${errorMessage}`));
