@@ -5,6 +5,16 @@ export const createAdmin = async (data: IAdminCreationAttributes) => {
   return await Admin.create(data);
 };
 
+export const updateAdmin = async (id: number, data: IAdminCreationAttributes) => {
+  const admin = await Admin.findByPk(id);
+
+  if (!admin) {
+    throw new Error('Admin not found');
+  }
+
+  return await admin.update(data);
+};
+
 export const findAdminByEmail = async (email: string) => {
   return await Admin.findOne({ where: { email: email } });
 };

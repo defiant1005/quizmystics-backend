@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import {
   createAdminHandler,
+  editAdminHandler,
+  getAdminByIdHandler,
   getAdminsHandler,
   getMeHandler,
   loginAdminHandler,
@@ -17,7 +19,7 @@ export const adminRouter = Router();
 adminRouter.post('/registration', validateCreateAdmin, superAdminMiddleware, createAdminHandler);
 
 adminRouter.post('/login', validateLoginAdmin, loginAdminHandler);
-//
+
 adminRouter.post('/logout', validateIsHasRefresh, logoutHandler);
 
 adminRouter.post('/refresh', validateIsHasRefresh, refreshTokenHandler);
@@ -25,5 +27,9 @@ adminRouter.post('/refresh', validateIsHasRefresh, refreshTokenHandler);
 adminRouter.get('/admins', authMiddleware, getAdminsHandler);
 
 adminRouter.get('/me', authMiddleware, getMeHandler);
+
+adminRouter.get('/admins/:id', authMiddleware, getAdminByIdHandler);
+
+adminRouter.put('/admins/:id', superAdminMiddleware, validateCreateAdmin, editAdminHandler);
 
 adminRouter.delete('/admins/:id', superAdminMiddleware, removeAdminHandler);

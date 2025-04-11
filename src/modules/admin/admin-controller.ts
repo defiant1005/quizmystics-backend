@@ -1,5 +1,12 @@
 import { NextFunction, Request, Response } from 'express';
-import { createAdmin, findAdminByEmail, findAdminById, findAllAdmins, removeAdmin } from './admin-service.js';
+import {
+  createAdmin,
+  findAdminByEmail,
+  findAdminById,
+  findAllAdmins,
+  removeAdmin,
+  updateAdmin,
+} from './admin-service.js';
 import { errorHandler } from '../../error/error-handler.js';
 import { ApiError } from '../../error/ApiError.js';
 import bcrypt from 'bcrypt';
@@ -143,6 +150,32 @@ export const getAdminsHandler = async (req: Request, res: Response, next: NextFu
   }
 };
 
+export const getAdminByIdHandler = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = req.params.id;
+    const numId = Number(id);
+
+    if (!id || isNaN(numId)) {
+      return next(ApiError.BadRequest('Пользователь не найден'));
+    }
+
+    const candidate = await findAdminById(numId);
+
+    if (!candidate) {
+      return next(ApiError.BadRequest('Пользователь не найден'));
+    }
+
+    const adminClientData = adminDto(candidate);
+
+    res.json({
+      data: adminClientData,
+    });
+  } catch (error) {
+    const errorMessage = errorHandler(error);
+    next(ApiError.Internal(`Ошибка при создании админа ${errorMessage}`));
+  }
+};
+
 export const removeAdminHandler = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = req.params.id;
@@ -156,6 +189,39 @@ export const removeAdminHandler = async (req: Request, res: Response, next: Next
 
     res.json({
       message: 'ok',
+    });
+  } catch (error) {
+    const errorMessage = errorHandler(error);
+    next(ApiError.Internal(`Ошибка при создании админа ${errorMessage}`));
+  }
+};
+
+export const editAdminHandler = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = req.params.id;
+    const numId = Number(id);
+
+    if (!id || isNaN(numId)) {
+      return next(ApiError.BadRequest('Пользователь не найден'));
+    }
+    const { email, password, role } = req.body;
+
+    const candidate = await findAdminById(numId);
+
+    if (!candidate) {
+      next(ApiError.BadRequest('Пользователь не найден'));
+    }
+
+    const hashPassword = await bcrypt.hash(password, 3);
+
+    const admin = await updateAdmin(numId, { email, password: hashPassword, role });
+
+    const adminClientData = adminDto(admin);
+
+    res.status(201).json({
+      data: {
+        user: adminClientData,
+      },
     });
   } catch (error) {
     const errorMessage = errorHandler(error);
