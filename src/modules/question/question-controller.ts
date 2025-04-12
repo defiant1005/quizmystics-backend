@@ -8,6 +8,7 @@ import {
 } from './question-service.js';
 import { errorHandler } from '../../error/error-handler.js';
 import { ApiError } from '../../error/ApiError.js';
+import { questionDto } from './question-dto.js';
 
 export const createQuestionHandler = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -22,7 +23,11 @@ export const createQuestionHandler = async (req: Request, res: Response, next: N
 export const getAllQuestionsHandler = async (_req: Request, res: Response, next: NextFunction) => {
   try {
     const questions = await getAllQuestions();
-    res.json(questions);
+    const questionFormatted = questions.map((_question) => questionDto(_question));
+
+    res.json({
+      data: questionFormatted,
+    });
   } catch (error) {
     const errorMessage = errorHandler(error);
     next(ApiError.Internal(`${errorMessage}`));
@@ -36,7 +41,9 @@ export const getQuestionByIdHandler = async (req: Request, res: Response, next: 
     if (!question) {
       next(ApiError.BadRequest(`Вопрос не найден`));
     } else {
-      res.json(question);
+      res.json({
+        data: questionDto(question),
+      });
     }
 
     next();

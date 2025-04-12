@@ -1,3 +1,5 @@
+import { Model } from 'sequelize';
+
 export enum AnswerVariant {
   ANSWER1 = 'answer1',
   ANSWER2 = 'answer2',
@@ -5,7 +7,7 @@ export enum AnswerVariant {
   ANSWER4 = 'answer4',
 }
 
-export interface IQuestion {
+interface IQuestionAttributes {
   id: number;
   categoryId: number;
   title: string;
@@ -16,4 +18,20 @@ export interface IQuestion {
   correct_answer: AnswerVariant;
 }
 
-export interface IQuestionCreate extends Omit<IQuestion, 'id' | 'categoryId'> {}
+export interface IQuestionCreationAttributes extends Omit<IQuestionAttributes, 'id' | 'categoryId'> {}
+
+export interface IQuestionClientData extends IQuestionAttributes {}
+
+export class IQuestionModel
+  extends Model<IQuestionAttributes, IQuestionCreationAttributes>
+  implements IQuestionAttributes
+{
+  public id!: number;
+  public title!: string;
+  public categoryId!: number;
+  public [AnswerVariant.ANSWER1]!: string;
+  public [AnswerVariant.ANSWER2]!: string;
+  public [AnswerVariant.ANSWER3]!: string;
+  public [AnswerVariant.ANSWER4]!: string;
+  public correct_answer!: AnswerVariant;
+}

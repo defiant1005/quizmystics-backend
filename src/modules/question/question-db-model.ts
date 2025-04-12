@@ -1,7 +1,8 @@
 import { sequelize } from '../../db/sequelize.js';
 import { DataTypes } from 'sequelize';
+import { IQuestionModel } from './types.js';
 
-export const Question = sequelize.define('question', {
+export const Question = sequelize.define<IQuestionModel>('question', {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
@@ -20,6 +21,14 @@ export const Question = sequelize.define('question', {
         args: [['answer1', 'answer2', 'answer3', 'answer4']],
         msg: 'correct_answer должен быть одним из 4-х ответов',
       },
+    },
+  },
+  categoryId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'categories',
+      key: 'id',
     },
   },
 });
