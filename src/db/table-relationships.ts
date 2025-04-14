@@ -1,6 +1,7 @@
 import { Question } from '../modules/question/question-db-model.js';
 import { Category } from '../modules/category/category-db-model.js';
-import { Ability, Character, CharacterClass, CharacterClassAbility } from '../modules/character/character-db-model.js';
+import { Character, CharacterClass, CharacterClassAbility } from '../modules/character/character-db-model.js';
+import { Ability } from '../modules/ablities/abilities-db-model.js';
 
 export const tableRelationship = () => {
   Category.hasOne(Question);

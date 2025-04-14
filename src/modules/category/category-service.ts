@@ -1,7 +1,7 @@
-import { ICategoryCreate } from './types.js';
 import { Category } from './category-db-model.js';
+import { ICategoryCreationAttributes } from './types.js';
 
-export const createCategory = async (data: ICategoryCreate) => {
+export const createCategory = async (data: ICategoryCreationAttributes) => {
   return await Category.create(data);
 };
 
@@ -13,7 +13,7 @@ export const getCategoryById = async (id: number) => {
   return await Category.findByPk(id);
 };
 
-export const updateCategory = async (id: number, data: ICategoryCreate) => {
+export const updateCategory = async (id: number, data: ICategoryCreationAttributes) => {
   const category = await Category.findByPk(id);
   if (!category) {
     throw new Error('Категория не найдена');
