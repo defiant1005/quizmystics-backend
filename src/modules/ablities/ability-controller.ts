@@ -50,7 +50,7 @@ export const getAbilityByIdHandler = async (req: Request, res: Response, next: N
     next();
   } catch (error) {
     const errorMessage = errorHandler(error);
-    next(ApiError.Internal(`Ошибка при получении категории ${errorMessage}`));
+    next(ApiError.Internal(`Ошибка при получении способности ${errorMessage}`));
   }
 };
 
@@ -78,6 +78,6 @@ export const deleteAbilityHandler = async (req: Request, res: Response, next: Ne
   } catch (error) {
     const errorMessage = errorHandler(error);
 
-    next(ApiError.Internal(`Ошибка при удалении категории ${errorMessage}`));
+    next(ApiError.Internal(`Ошибка при удалении способности ${errorMessage}`));
   }
 };
