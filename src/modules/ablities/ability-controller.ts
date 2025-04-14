@@ -43,7 +43,7 @@ export const getAbilityByIdHandler = async (req: Request, res: Response, next: N
       next(ApiError.BadRequest('Способность не найдена'));
     } else {
       res.json({
-        data: ability,
+        data: abilityDto(ability),
       });
     }
 
