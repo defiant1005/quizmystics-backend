@@ -12,31 +12,3 @@ export const Character = sequelize.define('character', {
   password: { type: DataTypes.STRING, allowNull: true },
   image_id: { type: DataTypes.STRING, allowNull: true },
 });
-
-export const CharacterClass = sequelize.define('character_class', {
-  id: {
-    type: DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true,
-  },
-  title: { type: DataTypes.STRING, allowNull: false },
-  description: { type: DataTypes.STRING, allowNull: false },
-});
-
-// export const Ability = sequelize.define('ability', {
-//   id: {
-//     type: DataTypes.INTEGER,
-//     primaryKey: true,
-//     autoIncrement: true,
-//   },
-//   title: { type: DataTypes.STRING, allowNull: false },
-//   description: { type: DataTypes.STRING, allowNull: false },
-// });
-
-export const CharacterClassAbility = sequelize.define('character_class_ability', {
-  id: {
-    type: DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true,
-  },
-});

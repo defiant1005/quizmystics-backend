@@ -1,7 +1,7 @@
 import { Question } from './question-db-model.js';
-import { IQuestionCreate } from './types.js';
+import { IQuestionCreationAttributes } from './types.js';
 
-export const createQuestion = async (data: IQuestionCreate) => {
+export const createQuestion = async (data: IQuestionCreationAttributes) => {
   return await Question.create(data);
 };
 
@@ -13,7 +13,7 @@ export const getQuestionById = async (id: number) => {
   return await Question.findByPk(id);
 };
 
-export const updateQuestion = async (id: number, data: IQuestionCreate) => {
+export const updateQuestion = async (id: number, data: IQuestionCreationAttributes) => {
   const question = await Question.findByPk(id);
   if (!question) {
     throw new Error('Вопрос не найден');
