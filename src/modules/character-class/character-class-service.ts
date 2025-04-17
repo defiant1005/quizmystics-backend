@@ -58,7 +58,40 @@ export const getCharacterClassesWithAbilities = async (): Promise<ICharacterClas
 };
 
 export const getCharacterClassById = async (id: number) => {
-  return await CharacterClass.findByPk(id);
+  const dbResponse = await CharacterClass.findByPk(id, {
+    include: [
+      {
+        model: Ability,
+        through: {
+          attributes: ['cooldown'],
+        },
+        attributes: ['id', 'title', 'slug', 'description'],
+      },
+    ],
+  });
+
+  if (!dbResponse) {
+    throw new Error('Класс не найден');
+  }
+
+  const abilities = (dbResponse.get('abilities') ?? []) as (IAbilityClientData & {
+    character_class_ability: { cooldown: number };
+  })[];
+
+  return {
+    id: dbResponse.id,
+    title: dbResponse.title,
+    description: dbResponse.description,
+    luck: dbResponse.luck,
+    lives: dbResponse.lives,
+    abilities: abilities.map((ability) => ({
+      id: ability.id,
+      cooldown: ability.character_class_ability.cooldown,
+      title: ability.title,
+      slug: ability.slug,
+      description: ability.description,
+    })),
+  };
 };
 
 export const updateCharacterClass = async (id: number, data: ICharacterClassCreationAttributes) => {

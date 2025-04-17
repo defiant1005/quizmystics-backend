@@ -39,27 +39,23 @@ export const getAllClassesHandler = async (req: Request, res: Response, next: Ne
 
 export const getCharacterClassByIdHandler = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const paramsId = req.params.id;
-    const paramsIdNumber = Number(req.params.id);
+    const idParam = req.params.id;
+    const id = Number(idParam);
 
-    if (!paramsId && isNaN(paramsIdNumber)) {
-      next(ApiError.BadRequest('Класс не найден'));
+    if (!idParam || isNaN(id)) {
+      return next(ApiError.BadRequest('Класс не найден'));
     }
 
-    const characterClass = await getCharacterClassById(paramsIdNumber);
+    const characterClass = await getCharacterClassById(id);
 
     if (!characterClass) {
-      next(ApiError.BadRequest('Класс не найден'));
-    } else {
-      res.json({
-        data: characterClass,
-      });
+      return next(ApiError.BadRequest('Класс не найден'));
     }
 
-    next();
+    res.json({ data: characterClass });
   } catch (error) {
     const errorMessage = errorHandler(error);
-    next(ApiError.Internal(`Ошибка при получении класса ${errorMessage}`));
+    next(ApiError.Internal(`Ошибка при получении класса: ${errorMessage}`));
   }
 };
 
