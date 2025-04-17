@@ -4,9 +4,8 @@ import { ApiError } from '../../error/ApiError.js';
 import {
   createCharacterClass,
   deleteCharacterClass,
-  getAllCharacterClassAbilities,
-  getAllCharacterClasses,
   getCharacterClassById,
+  getCharacterClassesWithAbilities,
   updateCharacterClass,
 } from './character-class-service.js';
 import { ICharacterClassClientData } from './types.js';
@@ -26,32 +25,15 @@ export const createCharacterClassHandler = async (req: Request, res: Response, n
   }
 };
 
-export const getAllClassesHandler = async (_req: Request, res: Response, next: NextFunction) => {
+export const getAllClassesHandler = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const [classes, abilities] = await Promise.all([getAllCharacterClasses(), getAllCharacterClassAbilities()]);
-
-    const clientData: Array<ICharacterClassClientData> = classes.map((charClass) => {
-      const classAbilities = abilities
-        .filter((ability) => ability.characterClassId === charClass.id)
-        .map((ability) => ({
-          abilityId: ability.abilityId,
-          cooldown: ability.cooldown,
-        }));
-
-      return {
-        id: charClass.id,
-        title: charClass.title,
-        description: charClass.description,
-        lives: charClass.lives,
-        luck: charClass.luck,
-        abilities: classAbilities,
-      };
+    const data: ICharacterClassClientData[] = await getCharacterClassesWithAbilities();
+    res.json({
+      data: data,
     });
-
-    res.json({ data: clientData });
   } catch (error) {
     const errorMessage = errorHandler(error);
-    next(ApiError.Internal(`Ошибка при получении способностей ${errorMessage}`));
+    next(ApiError.Internal(`Ошибка при получении класса ${errorMessage}`));
   }
 };
 

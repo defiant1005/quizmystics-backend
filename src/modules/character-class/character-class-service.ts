@@ -1,5 +1,7 @@
 import { CharacterClass, CharacterClassAbility } from './character-class-db-model.js';
-import { ICharacterClassCreationAttributes } from './types.js';
+import { ICharacterClassClientData, ICharacterClassCreationAttributes } from './types.js';
+import { IAbilityClientData } from '../ablities/types.js';
+import { Ability } from '../ablities/abilities-db-model.js';
 
 export const createCharacterClass = async (data: ICharacterClassCreationAttributes) => {
   const { abilities, ...other } = data;
@@ -19,8 +21,40 @@ export const createCharacterClass = async (data: ICharacterClassCreationAttribut
   return newClass;
 };
 
-export const getAllCharacterClasses = async () => {
-  return await CharacterClass.findAll();
+export const getCharacterClassesWithAbilities = async (): Promise<ICharacterClassClientData[]> => {
+  const classes = await CharacterClass.findAll({
+    include: [
+      {
+        model: Ability,
+        through: {
+          attributes: ['cooldown'],
+        },
+        attributes: ['id', 'title', 'slug', 'description'],
+      },
+    ],
+    order: [['id', 'ASC']],
+  });
+
+  return classes.map((charClass) => {
+    const abilities = (charClass.get('abilities') ?? []) as (IAbilityClientData & {
+      character_class_ability: { cooldown: number };
+    })[];
+
+    return {
+      id: charClass.id,
+      title: charClass.title,
+      description: charClass.description,
+      luck: charClass.luck,
+      lives: charClass.lives,
+      abilities: abilities.map((ability) => ({
+        abilityId: ability.id,
+        cooldown: ability.character_class_ability.cooldown,
+        title: ability.title,
+        slug: ability.slug,
+        description: ability.description,
+      })),
+    };
+  });
 };
 
 export const getCharacterClassById = async (id: number) => {
@@ -44,8 +78,4 @@ export const deleteCharacterClass = async (id: number) => {
   }
   await characterClass.destroy();
   return characterClass;
-};
-
-export const getAllCharacterClassAbilities = async () => {
-  return await CharacterClassAbility.findAll();
 };
