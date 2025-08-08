@@ -1,6 +1,6 @@
 import { Model } from 'sequelize';
 
-interface ICharacterClassAttributes {
+export interface ICharacterClassAttributes {
   id: number;
   title: string;
   description: string;

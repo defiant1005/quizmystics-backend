@@ -6,23 +6,26 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { router } from './package/router.js';
 import { errorMiddleware } from './middleware/error-middleware.js';
+import { CORS_OPTIONS } from './package/constants.js';
+import { createServer } from 'node:http';
+import { initSocket } from './socket/io.js';
+import { socketHandler } from './socket/handlers.js';
 
 dotenv.config();
 
 const app = express();
+const server = createServer(app);
+
+const io = initSocket(server);
+
+io.on('connection', socketHandler);
+
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(cookieParser());
 
-const corsOptions = {
-  origin: 'http://localhost:8080',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-};
-
-app.use(cors(corsOptions));
+app.use(cors(CORS_OPTIONS));
 
 app.use('/api', router);
 
@@ -33,7 +36,7 @@ const start = async () => {
   try {
     await initDB();
 
-    app.listen(port, () => {
+    server.listen(port, () => {
       logger.info(`✅ Сервер запущен на порту ${port}`);
     });
   } catch (error) {
@@ -42,4 +45,6 @@ const start = async () => {
   }
 };
 
-start().then();
+start().catch((error) => {
+  console.error('Ошибка при запуске сервера:', error);
+});
