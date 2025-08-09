@@ -1,6 +1,6 @@
-import { GameRoom, IPlayer } from './room-types.js';
+import { GameRoom, GameState, IPlayer } from './types/game-types.js';
 
-const RECONNECT_TTL = 600000;
+const RECONNECT_TTL = 120000;
 
 class RoomManager {
   private rooms: Record<string, GameRoom> = {};
@@ -12,7 +12,7 @@ class RoomManager {
       id: roomId,
       hostId,
       players: {},
-      state: 'waiting',
+      state: GameState.WAITING,
     };
     this.cleanupTimers[roomId] = {};
     return true;
@@ -43,6 +43,14 @@ class RoomManager {
 
     room.players[key] = { ...player };
     return { status: 'joined' as const, player: room.players[key] };
+  }
+
+  editUserReady(roomId: string, username: string, isReady: boolean) {
+    const room = this.rooms[roomId];
+
+    const user_key = username.toLowerCase();
+    const user = room.players[user_key];
+    user.isReady = isReady;
   }
 
   findRoomByPlayerId(socketId: string): GameRoom | undefined {

@@ -1,23 +1,30 @@
-// handlers.ts
 import { Socket } from 'socket.io';
 import { logger } from '../utils/logger.js';
 import { roomManager } from './rooms.js';
-import {
-  ClientToServerEvents,
-  IInterRoomParams,
-  IPlayer,
-  ServerToClientEvents,
-  SocketErrorSlug,
-} from './room-types.js';
+
 import { sendSocketError } from './utils/send-socket-error.js';
+import { ClientToServerEvents, ServerToClientEvents, SocketErrorSlug } from './types/socket-types.js';
+
+import { IPlayer } from './types/game-types.js';
+import {
+  IChangePlayerReadyParams,
+  ICreateRoomParams,
+  IGetPlayersParams,
+  IInterRoomParams,
+} from './types/client-server-response-types.js';
+import {
+  IRoomCreatedResponse,
+  ISuccessEnterResponse,
+  IUpdatePlayersResponse,
+} from './types/server-client-response-types.js';
 
 export const socketHandler = (socket: Socket) => {
   logger.info(`🔌 Новый клиент: ${socket.id}`);
 
-  socket.on(ClientToServerEvents.CREATE_ROOM, ({ name, roomId, characterId }) => {
-    logger.info(`📨 ${socket.id} хочет создать комнату: ${roomId}`);
+  socket.on(ClientToServerEvents.CREATE_ROOM, (params: ICreateRoomParams) => {
+    logger.info(`📨 ${socket.id} хочет создать комнату: ${params.roomId}`);
 
-    const created = roomManager.create(roomId, socket.id);
+    const created = roomManager.create(params.roomId, socket.id);
 
     if (!created) {
       sendSocketError(socket, SocketErrorSlug.ALREADY_EXISTS, 'Комната с таким ID уже существует');
@@ -26,37 +33,46 @@ export const socketHandler = (socket: Socket) => {
 
     const hostPlayer: IPlayer = {
       id: socket.id,
-      username: name,
-      characterId,
+      username: params.name,
+      characterId: params.characterId,
       isAdmin: true,
     };
 
-    const res = roomManager.joinByName(roomId, hostPlayer);
+    const res = roomManager.joinByName(params.roomId, hostPlayer);
     if (res.status === 'name_taken') {
-      // маловероятный кейс — имя хоста уже занято (скорее всего логика фронта не даст)
       sendSocketError(socket, SocketErrorSlug.NAME_TAKEN, 'Имя уже занято в комнате');
       return;
     }
 
-    socket.join(roomId);
-    socket.emit(ServerToClientEvents.ROOM_CREATED, { roomId, socketId: socket.id, name });
+    socket.join(params.roomId);
 
-    // оповестим всех участников (сейчас только хост)
-    const room = roomManager.getRoom(roomId);
-    socket.emit(ServerToClientEvents.SET_PLAYERS, { players: Object.values(room!.players) });
+    const roomCreatedResponse: IRoomCreatedResponse = {
+      roomId: params.roomId,
+      socketId: socket.id,
+      name: params.name,
+    };
 
-    logger.info(`✅ Комната ${roomId} создана хостом ${socket.id}`);
+    socket.emit(ServerToClientEvents.ROOM_CREATED, roomCreatedResponse);
+
+    const room = roomManager.getRoom(params.roomId);
+
+    const updatePlayersResponse: IUpdatePlayersResponse = {
+      players: Object.values(room!.players),
+    };
+    socket.emit(ServerToClientEvents.UPDATE_PLAYERS, updatePlayersResponse);
+
+    logger.info(`✅ Комната ${params.roomId} создана хостом ${socket.id}`);
   });
 
-  socket.on(ClientToServerEvents.ENTER_ROOM, ({ name, roomId, characterId }: IInterRoomParams) => {
-    logger.info(`📨 ${socket.id} хочет войти в комнату: ${roomId}`);
+  socket.on(ClientToServerEvents.ENTER_ROOM, (data: IInterRoomParams) => {
+    logger.info(`📨 ${socket.id} хочет войти в комнату: ${data.roomId}`);
 
-    if (!name || !roomId) {
+    if (!data.name || !data.roomId) {
       sendSocketError(socket, SocketErrorSlug.VALIDATE_ERROR, 'Укажите имя и номер комнаты');
       return;
     }
 
-    const room = roomManager.getRoom(roomId);
+    const room = roomManager.getRoom(data.roomId);
     if (!room) {
       sendSocketError(socket, SocketErrorSlug.NOT_FOUND, 'Комната не найдена');
       return;
@@ -67,21 +83,20 @@ export const socketHandler = (socket: Socket) => {
       return;
     }
 
-    // Если это новый игрок — обязателен characterId
-    const existing = room.players[name.toLowerCase()];
-    if (!existing && !characterId) {
+    const existing = room.players[data.name.toLowerCase()];
+    if (!existing && !data.characterId) {
       sendSocketError(socket, SocketErrorSlug.VALIDATE_ERROR, 'Выберите персонажа');
       return;
     }
 
     const player: IPlayer = {
       id: socket.id,
-      username: name,
-      characterId: characterId ?? existing?.characterId!,
+      username: data.name,
+      characterId: data.characterId ?? existing?.characterId!,
       isAdmin: false,
     };
 
-    const res = roomManager.joinByName(roomId, player);
+    const res = roomManager.joinByName(data.roomId, player);
 
     if (res.status === 'not_found') {
       sendSocketError(socket, SocketErrorSlug.NOT_FOUND, 'Комната не найдена');
@@ -93,34 +108,67 @@ export const socketHandler = (socket: Socket) => {
       return;
     }
 
-    // joined OR reconnected
-    socket.join(roomId);
-    const updatedRoom = roomManager.getRoom(roomId)!;
+    socket.join(data.roomId);
+    const updatedRoom = roomManager.getRoom(data.roomId)!;
 
-    socket.emit(ServerToClientEvents.SET_PLAYERS, { players: Object.values(updatedRoom.players), roomId, name });
-    socket
-      .to(roomId)
-      .emit(ServerToClientEvents.SET_PLAYERS, { players: Object.values(updatedRoom.players), roomId, name });
+    const successEnterResponse: ISuccessEnterResponse = {
+      roomId: data.roomId,
+      name: data.name,
+    };
 
-    socket.emit(ServerToClientEvents.CHANGE_PLAYERS_COUNT, { roomId, players: Object.values(updatedRoom.players) });
-    socket.to(roomId).emit(ServerToClientEvents.CHANGE_PLAYERS_COUNT, { players: Object.values(updatedRoom.players) });
+    socket.emit(ServerToClientEvents.SUCCESS_ENTER, successEnterResponse);
 
-    logger.info(`✅ ${socket.id} (${name}) вошёл/переподключился в комнату ${roomId}`);
+    const updatePlayersResponse: IUpdatePlayersResponse = {
+      players: Object.values(updatedRoom.players),
+    };
+
+    socket.emit(ServerToClientEvents.UPDATE_PLAYERS, updatePlayersResponse);
+
+    socket.to(data.roomId).emit(ServerToClientEvents.UPDATE_PLAYERS, updatePlayersResponse);
+
+    logger.info(`✅ ${socket.id} (${data.name}) вошёл/переподключился в комнату ${data.roomId}`);
   });
 
-  socket.on(ClientToServerEvents.GET_PLAYERS, ({ roomId }) => {
-    if (!roomId) {
+  socket.on(ClientToServerEvents.GET_PLAYERS, (data: IGetPlayersParams) => {
+    if (!data.roomId) {
       sendSocketError(socket, SocketErrorSlug.ROOM_NOT_FOUND, 'Комната не найдена');
       return;
     }
 
-    const room = roomManager.getRoom(roomId);
+    const room = roomManager.getRoom(data.roomId);
     if (!room) {
       sendSocketError(socket, SocketErrorSlug.NOT_FOUND, 'Комната не найдена');
       return;
     }
 
-    socket.emit(ServerToClientEvents.SET_PLAYERS, { players: Object.values(room.players) });
+    const updatePlayersResponse: IUpdatePlayersResponse = {
+      players: Object.values(room.players),
+    };
+
+    socket.emit(ServerToClientEvents.UPDATE_PLAYERS, updatePlayersResponse);
+  });
+
+  socket.on(ClientToServerEvents.CHANGE_PLAYER_READY, (data: IChangePlayerReadyParams) => {
+    if (!data.roomId || !data.username) {
+      sendSocketError(socket, SocketErrorSlug.VALIDATE_ERROR, 'Заполните все поля');
+      return;
+    }
+
+    roomManager.editUserReady(data.roomId, data.username, data.isReady);
+
+    const room = roomManager.getRoom(data.roomId);
+
+    if (!room) {
+      sendSocketError(socket, SocketErrorSlug.NOT_FOUND, 'Комната не найдена');
+      return;
+    }
+
+    const updatePlayersResponse: IUpdatePlayersResponse = {
+      players: Object.values(room.players),
+    };
+
+    socket.emit(ServerToClientEvents.UPDATE_PLAYERS, updatePlayersResponse);
+    socket.to(data.roomId).emit(ServerToClientEvents.UPDATE_PLAYERS, updatePlayersResponse);
   });
 
   socket.on(ClientToServerEvents.DISCONNECT, () => {
@@ -129,9 +177,11 @@ export const socketHandler = (socket: Socket) => {
     const room = roomManager.markDisconnectBySocketId(socket.id);
     if (!room) return;
 
-    // уведомляем остальных, что статус игроков изменился (у кого-то появился disconnectedAt)
-    socket.to(room.id).emit(ServerToClientEvents.SET_PLAYERS, { players: Object.values(room.players) });
-    socket.to(room.id).emit(ServerToClientEvents.CHANGE_PLAYERS_COUNT, { players: Object.values(room.players) });
+    const updatePlayersResponse: IUpdatePlayersResponse = {
+      players: Object.values(room.players),
+    };
+
+    socket.to(room.id).emit(ServerToClientEvents.UPDATE_PLAYERS, updatePlayersResponse);
 
     logger.info(`🚪 Игрок с socketId ${socket.id} помечен как отключённый в комнате ${room.id}`);
   });

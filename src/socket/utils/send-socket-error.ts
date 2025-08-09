@@ -1,6 +1,6 @@
 // src/socket/utils/send-socket-error.ts
 import { Socket } from 'socket.io';
-import { ServerToClientEvents, SocketErrorPayload, SocketErrorSlug } from '../room-types.js';
+import { ServerToClientEvents, SocketErrorPayload, SocketErrorSlug } from '../types/socket-types.js';
 
 export function sendSocketError(socket: Socket, slug: SocketErrorSlug, message: string) {
   const payload: SocketErrorPayload = { slug, message };
