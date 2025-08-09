@@ -19,6 +19,10 @@ export default [
         console: true,
       },
     },
+    env: {
+      node: true,
+      es2022: true,
+    },
     plugins: {
       '@typescript-eslint': tsPlugin,
       'unused-imports': unusedImports,

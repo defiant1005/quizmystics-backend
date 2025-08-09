@@ -3,6 +3,7 @@ export interface IPlayer {
   username: string;
   characterId: number;
   isAdmin?: boolean;
+  disconnectedAt?: number;
 }
 
 export interface GameRoom {
@@ -22,7 +23,6 @@ export enum ClientToServerEvents {
 export enum ServerToClientEvents {
   ROOM_CREATED = 'roomCreated',
   CHANGE_PLAYERS_COUNT = 'changePlayersCount',
-  PLAYER_JOINED = 'playerJoined',
   SET_PLAYERS = 'setPlayers',
 
   ERROR = 'error',
@@ -35,6 +35,7 @@ export enum SocketErrorSlug {
   ROOM_NOT_FOUND = 'room_not_found',
   GAME_IN_PROGRESS = 'game_in_progress',
   ALREADY_IN_ROOM = 'already_in_room',
+  NAME_TAKEN = 'name_taken',
 }
 
 export interface SocketErrorPayload {

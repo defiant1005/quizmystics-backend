@@ -3,7 +3,7 @@
     "types": ["node", "express"],
     "typeRoots": ["./node_modules/@types", "./types"],
     "target": "ES2022",
-    "lib": ["ES6"],
+    "lib": ["ES2022", "DOM"],
     "module": "NodeNext",
     "rootDir": "./src",
     "resolveJsonModule": true,
