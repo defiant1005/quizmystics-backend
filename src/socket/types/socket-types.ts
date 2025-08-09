@@ -21,6 +21,7 @@ export enum SocketErrorSlug {
   ROOM_NOT_FOUND = 'room_not_found',
   GAME_IN_PROGRESS = 'game_in_progress',
   NAME_TAKEN = 'name_taken',
+  EXCEEDED_LIMIT = 'exceeded_limit',
 }
 
 export interface SocketErrorPayload {

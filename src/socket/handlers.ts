@@ -5,7 +5,7 @@ import { roomManager } from './rooms.js';
 import { sendSocketError } from './utils/send-socket-error.js';
 import { ClientToServerEvents, ServerToClientEvents, SocketErrorSlug } from './types/socket-types.js';
 
-import { IPlayer } from './types/game-types.js';
+import { GameState, IPlayer } from './types/game-types.js';
 import {
   IChangePlayerReadyParams,
   ICreateRoomParams,
@@ -78,8 +78,13 @@ export const socketHandler = (socket: Socket) => {
       return;
     }
 
-    if (room.state !== 'waiting') {
+    if (room.state !== GameState.WAITING) {
       sendSocketError(socket, SocketErrorSlug.GAME_IN_PROGRESS, 'Игра уже началась');
+      return;
+    }
+
+    if (Object.values(room.players).length === 8) {
+      sendSocketError(socket, SocketErrorSlug.EXCEEDED_LIMIT, 'Игра рассчитана до 8 игроков');
       return;
     }
 
