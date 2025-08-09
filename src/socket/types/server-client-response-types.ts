@@ -13,4 +13,5 @@ export interface IRoomCreatedResponse {
   roomId: string;
   socketId: string;
   name: string;
+  isHost: boolean;
 }

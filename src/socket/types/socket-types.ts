@@ -3,6 +3,8 @@ export enum ClientToServerEvents {
   ENTER_ROOM = 'enterRoom',
   GET_PLAYERS = 'getPlayers',
   CHANGE_PLAYER_READY = 'changePlayerReady',
+  CHOOSING_CATEGORY = 'choosingCategory',
+
   DISCONNECT = 'disconnect',
 }
 
@@ -10,6 +12,9 @@ export enum ServerToClientEvents {
   ROOM_CREATED = 'roomCreated',
   UPDATE_PLAYERS = 'updatePlayers',
   SUCCESS_ENTER = 'successEnter',
+  START_GAME = 'startGame',
+  GAME_OVER = 'gameOver',
+  CATEGORY_TURN = 'categoryTurn',
 
   ERROR = 'error',
 }
@@ -22,6 +27,8 @@ export enum SocketErrorSlug {
   GAME_IN_PROGRESS = 'game_in_progress',
   NAME_TAKEN = 'name_taken',
   EXCEEDED_LIMIT = 'exceeded_limit',
+  NOT_ENOUGH_PLAYERS = 'not_enough_players',
+  INTERNAL_ERROR = 'internal_error',
 }
 
 export interface SocketErrorPayload {

@@ -18,4 +18,8 @@ export interface GameRoom {
   hostId: string;
   players: Record<string, IPlayer>;
   state: GameState;
+
+  questionOrder?: string[];
+  currentQuestion?: number;
+  totalQuestions?: number;
 }

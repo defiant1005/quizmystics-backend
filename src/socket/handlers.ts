@@ -1,6 +1,6 @@
 import { Socket } from 'socket.io';
 import { logger } from '../utils/logger.js';
-import { roomManager } from './rooms.js';
+import { roomManager } from './room-manager.js';
 
 import { sendSocketError } from './utils/send-socket-error.js';
 import { ClientToServerEvents, ServerToClientEvents, SocketErrorSlug } from './types/socket-types.js';
@@ -8,6 +8,7 @@ import { ClientToServerEvents, ServerToClientEvents, SocketErrorSlug } from './t
 import { GameState, IPlayer } from './types/game-types.js';
 import {
   IChangePlayerReadyParams,
+  IClientServerParams,
   ICreateRoomParams,
   IGetPlayersParams,
   IInterRoomParams,
@@ -50,6 +51,7 @@ export const socketHandler = (socket: Socket) => {
       roomId: params.roomId,
       socketId: socket.id,
       name: params.name,
+      isHost: true,
     };
 
     socket.emit(ServerToClientEvents.ROOM_CREATED, roomCreatedResponse);
@@ -174,6 +176,65 @@ export const socketHandler = (socket: Socket) => {
 
     socket.emit(ServerToClientEvents.UPDATE_PLAYERS, updatePlayersResponse);
     socket.to(data.roomId).emit(ServerToClientEvents.UPDATE_PLAYERS, updatePlayersResponse);
+
+    const allReady = Object.values(room.players).length > 1 && Object.values(room.players).every((p) => p.isReady);
+
+    if (allReady) {
+      room.state = GameState.PLAYING;
+
+      socket.emit(ServerToClientEvents.START_GAME);
+      socket.to(data.roomId).emit(ServerToClientEvents.START_GAME);
+    }
+  });
+
+  socket.on(ClientToServerEvents.CHOOSING_CATEGORY, (data: IClientServerParams) => {
+    if (!data.roomId) {
+      sendSocketError(socket, SocketErrorSlug.VALIDATE_ERROR, 'Что-то пошло не так');
+      return;
+    }
+
+    const room = roomManager.getRoom(data.roomId);
+    if (!room) {
+      sendSocketError(socket, SocketErrorSlug.NOT_FOUND, 'Комната не найдена');
+      return;
+    }
+
+    if (!room.questionOrder || room.questionOrder.length === 0) {
+      const initRes = roomManager.initQuestionOrder(data.roomId, 12);
+      if (initRes.status !== 'ok') {
+        if (initRes.status === 'not_enough_players') {
+          sendSocketError(socket, SocketErrorSlug.NOT_ENOUGH_PLAYERS, 'Недостаточно игроков для начала игры');
+        } else {
+          sendSocketError(socket, SocketErrorSlug.INTERNAL_ERROR, 'Не удалось сформировать порядок вопросов');
+        }
+        return;
+      }
+    }
+
+    room.currentQuestion = room.currentQuestion ?? 0;
+    room.totalQuestions = room.totalQuestions ?? 12;
+
+    const chooserRes = roomManager.getCurrentChooser(data.roomId);
+    if (chooserRes.status === 'finished') {
+      room.state = GameState.ENDED;
+      socket.emit(ServerToClientEvents.GAME_OVER, { roomId: data.roomId });
+      socket.to(data.roomId).emit(ServerToClientEvents.GAME_OVER, { roomId: data.roomId });
+      return;
+    }
+    if (chooserRes.status !== 'ok') {
+      sendSocketError(socket, SocketErrorSlug.INTERNAL_ERROR, 'Не удалось определить выбирающего');
+      return;
+    }
+
+    const payload = {
+      roomId: data.roomId,
+      index: chooserRes.index,
+      total: room.totalQuestions,
+      chooser: chooserRes.chooser,
+    };
+
+    socket.emit(ServerToClientEvents.CATEGORY_TURN, payload);
+    socket.to(data.roomId).emit(ServerToClientEvents.CATEGORY_TURN, payload);
   });
 
   socket.on(ClientToServerEvents.DISCONNECT, () => {
