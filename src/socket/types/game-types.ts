@@ -34,4 +34,7 @@ export interface GameRoom {
   usedQuestionIds: number[];
 
   playerAbilities?: Record<string, IGameAbility>;
+
+  pendingActions?: Record<string, { abilityId: number; targetUsername: string }[]>;
+  pendingSubmitted?: string[];
 }

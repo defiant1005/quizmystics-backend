@@ -26,3 +26,11 @@ export interface IGetQuestionsParams extends IClientServerParams {
 export interface IGetSpellInfoParams extends IClientServerParams {
   username: string;
 }
+
+export interface IUseAbilityParams extends IClientServerParams {
+  username: string;
+  actions: Array<{
+    abilityId: number;
+    targetUsername: string;
+  }>;
+}

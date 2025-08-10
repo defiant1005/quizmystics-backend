@@ -1,8 +1,14 @@
 import { IPlayer } from './game-types.js';
 import { AnswerVariant } from '../../modules/question/types.js';
 
+export interface IUpdatePlayersMeta {
+  submittedCount: number;
+  total: number;
+}
+
 export interface IUpdatePlayersResponse {
   players: IPlayer[];
+  meta?: IUpdatePlayersMeta;
 }
 
 export interface ISuccessEnterResponse {
@@ -68,3 +74,19 @@ export type GetPlayerSpellsResult =
   | { status: 'player_not_found' }
   | { status: 'not_found' }
   | { status: 'error'; error: unknown };
+
+export interface IActionsReceived {
+  submittedCount: number;
+  total: number;
+}
+
+export interface IAbilitiesResolved {
+  results: Array<{
+    from: string;
+    to: string;
+    abilityId: number;
+    success: boolean;
+    reason?: string;
+  }>;
+  cooldowns: Record<string, Record<number, number>>;
+}

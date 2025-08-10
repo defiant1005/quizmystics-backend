@@ -279,6 +279,146 @@ class RoomManager {
     }
   }
 
+  submitPlayerActions(roomId: string, username: string, actions: { abilityId: number; targetUsername: string }[]) {
+    const room = this.rooms[roomId];
+    if (!room) return { status: 'not_found' as const };
+
+    if (!room.pendingActions) room.pendingActions = {};
+    if (!room.pendingSubmitted) room.pendingSubmitted = [];
+
+    const key = username;
+    if (room.pendingSubmitted.includes(key)) {
+      return { status: 'already_submitted' as const };
+    }
+
+    room.pendingActions[key] = actions;
+    room.pendingSubmitted.push(key);
+
+    const activePlayers = Object.values(room.players)
+      .filter((p) => !p.disconnectedAt)
+      .map((p) => p.username);
+
+    const complete = activePlayers.every((u) => room.pendingSubmitted!.includes(u));
+
+    return {
+      status: 'ok' as const,
+      submittedCount: room.pendingSubmitted.length,
+      total: activePlayers.length,
+      complete,
+    };
+  }
+
+  allActivePlayersSubmitted(roomId: string) {
+    const room = this.rooms[roomId];
+    if (!room) return false;
+    const activePlayers = Object.values(room.players)
+      .filter((p) => !p.disconnectedAt)
+      .map((p) => p.username);
+    if (!room.pendingSubmitted) return false;
+    return activePlayers.every((u) => room.pendingSubmitted!.includes(u));
+  }
+
+  resolvePendingActions(roomId: string) {
+    const room = this.rooms[roomId];
+    if (!room) return { status: 'not_found' as const };
+
+    const pending = room.pendingActions ?? {};
+    const results: Array<{
+      from: string;
+      to: string;
+      abilityId: number;
+      success: boolean;
+      reason?: string;
+    }> = [];
+
+    if (!room.playerAbilities) room.playerAbilities = {};
+
+    const getPlayerEntry = (username: string) => {
+      const key = username.toLowerCase();
+      return room.playerAbilities![key];
+    };
+
+    const isValidTarget = (targetUsername: string) => {
+      const key = targetUsername.toLowerCase();
+      const p = room.players[key];
+      return !!p && !p.disconnectedAt;
+    };
+
+    for (const [from, actions] of Object.entries(pending)) {
+      const fromKey = from.toLowerCase();
+      const playerInRoom = room.players[fromKey];
+      if (!playerInRoom) {
+        for (const a of actions) {
+          results.push({
+            from,
+            to: a.targetUsername,
+            abilityId: a.abilityId,
+            success: false,
+            reason: 'player_not_in_room',
+          });
+        }
+        continue;
+      }
+
+      if (!room.playerAbilities![fromKey]) {
+        room.playerAbilities![fromKey] = { abilities: [], cooldowns: {} };
+      }
+      const entry = room.playerAbilities![fromKey];
+
+      for (const a of actions) {
+        const abilityMeta = entry.abilities.find((ab) => ab.id === a.abilityId);
+        if (!abilityMeta) {
+          results.push({
+            from,
+            to: a.targetUsername,
+            abilityId: a.abilityId,
+            success: false,
+            reason: 'ability_not_found',
+          });
+          continue;
+        }
+
+        const remaining = entry.cooldowns[a.abilityId] ?? 0;
+        if (remaining > 0) {
+          results.push({ from, to: a.targetUsername, abilityId: a.abilityId, success: false, reason: 'on_cooldown' });
+          continue;
+        }
+
+        if (!isValidTarget(a.targetUsername)) {
+          results.push({
+            from,
+            to: a.targetUsername,
+            abilityId: a.abilityId,
+            success: false,
+            reason: 'invalid_target',
+          });
+          continue;
+        }
+
+        entry.cooldowns[a.abilityId] = abilityMeta.cooldown;
+        results.push({ from, to: a.targetUsername, abilityId: a.abilityId, success: true });
+      }
+    }
+
+    const cooldownSnapshot: Record<string, Record<number, number>> = {};
+    for (const usernameKey of Object.keys(room.playerAbilities)) {
+      const entry = room.playerAbilities[usernameKey];
+      cooldownSnapshot[usernameKey] = { ...(entry.cooldowns ?? {}) };
+    }
+
+    room.pendingActions = {};
+    room.pendingSubmitted = [];
+
+    return { status: 'ok' as const, results, cooldownSnapshot };
+  }
+
+  clearPendingActions(roomId: string) {
+    const room = this.rooms[roomId];
+    if (!room) return;
+    room.pendingActions = {};
+    room.pendingSubmitted = [];
+  }
+
   deleteRoom(roomId: string) {
     const timers = this.cleanupTimers[roomId] ?? {};
     Object.values(timers).forEach(clearTimeout);

@@ -6,6 +6,7 @@ export enum ClientToServerEvents {
   CHOOSING_CATEGORY = 'choosingCategory',
   GET_QUESTIONS = 'getQuestions',
   GET_SPELL_INFO = 'getSpellInfo',
+  USE_ABILITIES = 'useAbilities',
 
   DISCONNECT = 'disconnect',
 }
@@ -15,11 +16,13 @@ export enum ServerToClientEvents {
   UPDATE_PLAYERS = 'updatePlayers',
   SUCCESS_ENTER = 'successEnter',
   START_GAME = 'startGame',
-  GAME_OVER = 'gameOver',
   CATEGORY_TURN = 'categoryTurn',
   NEW_QUESTION = 'newQuestion',
   SPELL_INFO = 'spellInfo',
+  ACTIONS_RECEIVED = 'actionsReceived',
+  ABILITIES_RESOLVED = 'abilitiesResolved',
 
+  GAME_OVER = 'gameOver',
   ERROR = 'error',
 }
 
@@ -31,6 +34,7 @@ export enum SocketErrorSlug {
   GAME_IN_PROGRESS = 'game_in_progress',
   NAME_TAKEN = 'name_taken',
   EXCEEDED_LIMIT = 'exceeded_limit',
+  ALREADY_SUBMITTED = 'already_submitted',
   NOT_ENOUGH_PLAYERS = 'not_enough_players',
   INTERNAL_ERROR = 'internal_error',
 }

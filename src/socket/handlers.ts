@@ -14,8 +14,11 @@ import {
   IGetQuestionsParams,
   IGetSpellInfoParams,
   IInterRoomParams,
+  IUseAbilityParams,
 } from './types/client-server-response-types.js';
 import {
+  IAbilitiesResolved,
+  IActionsReceived,
   ICategoryTurnResponse,
   IGameQuestion,
   IGetSpellsResponse,
@@ -309,6 +312,80 @@ export const socketHandler = (socket: Socket) => {
     };
 
     socket.emit(ServerToClientEvents.SPELL_INFO, params);
+  });
+
+  socket.on(ClientToServerEvents.USE_ABILITIES, (data: IUseAbilityParams) => {
+    if (!data.roomId || !data.username) {
+      sendSocketError(socket, SocketErrorSlug.VALIDATE_ERROR, 'Не переданы параметры');
+      return;
+    }
+
+    const room = roomManager.getRoom(data.roomId);
+    if (!room) {
+      sendSocketError(socket, SocketErrorSlug.NOT_FOUND, 'Комната не найдена');
+      return;
+    }
+
+    const player = roomManager.getPlayer(data.roomId, data.username);
+    if (!player) {
+      sendSocketError(socket, SocketErrorSlug.NOT_FOUND, 'Игрок не найден в комнате');
+      return;
+    }
+    if (player.disconnectedAt) {
+      sendSocketError(socket, SocketErrorSlug.NOT_FOUND, 'Игрок отключён');
+      return;
+    }
+
+    const actions = data.actions ?? [];
+    if (!Array.isArray(actions)) {
+      sendSocketError(socket, SocketErrorSlug.VALIDATE_ERROR, 'Неверный формат actions');
+      return;
+    }
+
+    const submitRes = roomManager.submitPlayerActions(data.roomId, data.username, actions);
+    if (submitRes.status === 'not_found') {
+      sendSocketError(socket, SocketErrorSlug.NOT_FOUND, 'Комната не найдена');
+      return;
+    }
+    if (submitRes.status === 'already_submitted') {
+      sendSocketError(socket, SocketErrorSlug.ALREADY_SUBMITTED, 'Вы уже отправили действия на этот ход');
+      return;
+    }
+
+    const updatePlayersResponse: IUpdatePlayersResponse = {
+      players: Object.values(room.players),
+      meta: { submittedCount: submitRes.submittedCount, total: submitRes.total },
+    };
+
+    socket.to(data.roomId).emit(ServerToClientEvents.UPDATE_PLAYERS, updatePlayersResponse);
+
+    const params: IActionsReceived = {
+      submittedCount: submitRes.submittedCount,
+      total: submitRes.total,
+    };
+
+    socket.emit(ServerToClientEvents.ACTIONS_RECEIVED, params);
+
+    if (!submitRes.complete) return;
+
+    const resolveRes = roomManager.resolvePendingActions(data.roomId);
+    if (resolveRes.status !== 'ok') {
+      sendSocketError(socket, SocketErrorSlug.INTERNAL_ERROR, 'Ошибка при обработке действий');
+      return;
+    }
+
+    const abilityParams: IAbilitiesResolved = {
+      results: resolveRes.results,
+      cooldowns: resolveRes.cooldownSnapshot,
+    };
+
+    socket.to(data.roomId).emit(ServerToClientEvents.ABILITIES_RESOLVED, abilityParams);
+    socket.emit(ServerToClientEvents.ABILITIES_RESOLVED, abilityParams);
+
+    const updatedPlayersPayload: IUpdatePlayersResponse = { players: Object.values(room.players) };
+
+    socket.emit(ServerToClientEvents.UPDATE_PLAYERS, updatedPlayersPayload);
+    socket.to(data.roomId).emit(ServerToClientEvents.UPDATE_PLAYERS, updatedPlayersPayload);
   });
 
   socket.on(ClientToServerEvents.DISCONNECT, () => {
