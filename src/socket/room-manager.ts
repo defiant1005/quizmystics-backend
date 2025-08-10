@@ -1,5 +1,7 @@
-import { GameRoom, GameState, IPlayer } from './types/game-types.js';
+import { GameRoom, GameState, IGameAbility, IPlayer } from './types/game-types.js';
 import { getAllCategories } from '../modules/category/category-service.js';
+import { getCharacterClassById } from '../modules/character-class/character-class-service.js';
+import { GetPlayerSpellsResult, ISpellInfo } from './types/server-client-response-types.js';
 
 const RECONNECT_TTL = 120000;
 
@@ -170,6 +172,111 @@ class RoomManager {
 
   async getAllCategories() {
     return await getAllCategories();
+  }
+
+  getPlayer(roomId: string, username: string) {
+    const room = this.rooms[roomId];
+
+    const key = username.toLowerCase();
+    return room.players[key];
+  }
+
+  async initPlayerAbilities(roomId: string, username: string) {
+    const room = this.rooms[roomId];
+    if (!room) return { status: 'not_found' };
+
+    if (!room.playerAbilities) room.playerAbilities = {};
+
+    const key = username.toLowerCase();
+    if (room.playerAbilities[key]) {
+      return { status: 'ok', data: room.playerAbilities[key] };
+    }
+
+    const player = room.players[key];
+    if (!player) return { status: 'player_not_found' };
+
+    try {
+      const charClass = await getCharacterClassById(player.characterId);
+
+      const abilities = (charClass.abilities ?? []).map((a) => ({
+        id: a.id,
+        title: a.title,
+        slug: a.slug,
+        description: a.description,
+        cooldown: a.cooldown,
+      }));
+
+      const cooldowns: Record<string, number> = {};
+
+      abilities.forEach((a) => {
+        cooldowns[a.id] = 0;
+      });
+
+      room.playerAbilities[key] = { abilities, cooldowns };
+
+      return { status: 'ok', data: room.playerAbilities[key] };
+    } catch (err) {
+      return { status: 'error', error: err };
+    }
+  }
+
+  async getPlayerSpellInfo(roomId: string, username: string): Promise<GetPlayerSpellsResult> {
+    const room = this.rooms[roomId];
+    if (!room) return { status: 'not_found' };
+
+    const key = username.toLowerCase();
+
+    if (!room.playerAbilities || !room.playerAbilities[key]) {
+      const initRes = await this.initPlayerAbilities(roomId, username);
+      if (initRes.status !== 'ok') {
+        if (initRes.status === 'player_not_found') return { status: 'player_not_found' };
+        return { status: 'error', error: (initRes as any).error ?? null };
+      }
+    }
+
+    const entry = room.playerAbilities![key];
+    if (!entry) return { status: 'player_not_found' };
+
+    const result: ISpellInfo[] = entry.abilities.map((a) => {
+      const remaining = entry.cooldowns[a.id] ?? 0;
+      return {
+        id: a.id,
+        title: a.title,
+        slug: a.slug,
+        description: a.description,
+        baseCooldown: a.cooldown,
+        remaining,
+        available: remaining === 0,
+      };
+    });
+
+    return { status: 'ok', spells: result };
+  }
+
+  setPlayerAbilityCooldown(roomId: string, username: string, abilityId: number, turns: number) {
+    const room = this.rooms[roomId];
+    if (!room || !room.playerAbilities) return { status: 'not_found' };
+
+    const key = username.toLowerCase();
+    const entry = room.playerAbilities[key];
+    if (!entry) return { status: 'player_not_found' };
+
+    entry.cooldowns[abilityId] = Math.max(0, turns);
+    return { status: 'ok' };
+  }
+
+  decrementAllCooldowns(roomId: string) {
+    const room = this.rooms[roomId];
+    if (!room || !room.playerAbilities) return;
+
+    for (const usernameKey of Object.keys(room.playerAbilities)) {
+      const entry: IGameAbility = room.playerAbilities[usernameKey];
+
+      for (const abilityIdStr of Object.keys(entry.cooldowns)) {
+        const aid = Number(abilityIdStr);
+        entry.cooldowns[aid] = Math.max(0, (entry.cooldowns[aid] ?? 0) - 1);
+      }
+    }
   }
 
   deleteRoom(roomId: string) {

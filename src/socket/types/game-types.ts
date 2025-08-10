@@ -13,6 +13,11 @@ export enum GameState {
   ENDED = 'ended',
 }
 
+export interface IGameAbility {
+  abilities: { id: number; title: string; slug: string; description: string; cooldown: number }[];
+  cooldowns: Record<number, number>;
+}
+
 export interface GameRoom {
   id: string;
   hostId: string;
@@ -27,4 +32,6 @@ export interface GameRoom {
   usedCategories: number[];
 
   usedQuestionIds: number[];
+
+  playerAbilities?: Record<string, IGameAbility>;
 }

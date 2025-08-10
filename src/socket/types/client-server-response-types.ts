@@ -22,3 +22,7 @@ export interface IChangePlayerReadyParams extends IClientServerParams {
 export interface IGetQuestionsParams extends IClientServerParams {
   categoryId: number;
 }
+
+export interface IGetSpellInfoParams extends IClientServerParams {
+  username: string;
+}

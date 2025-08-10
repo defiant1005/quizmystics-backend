@@ -12,12 +12,15 @@ import {
   ICreateRoomParams,
   IGetPlayersParams,
   IGetQuestionsParams,
+  IGetSpellInfoParams,
   IInterRoomParams,
 } from './types/client-server-response-types.js';
 import {
   ICategoryTurnResponse,
   IGameQuestion,
+  IGetSpellsResponse,
   IRoomCreatedResponse,
+  ISpellInfo,
   ISuccessEnterResponse,
   IUpdatePlayersResponse,
 } from './types/server-client-response-types.js';
@@ -274,6 +277,38 @@ export const socketHandler = (socket: Socket) => {
 
     socket.emit(ServerToClientEvents.NEW_QUESTION, newQuestionParams);
     socket.to(data.roomId).emit(ServerToClientEvents.NEW_QUESTION, newQuestionParams);
+  });
+
+  socket.on(ClientToServerEvents.GET_SPELL_INFO, async (data: IGetSpellInfoParams) => {
+    if (!data.roomId || !data.username) {
+      sendSocketError(socket, SocketErrorSlug.VALIDATE_ERROR, 'Не переданы параметры');
+      return;
+    }
+
+    const res = await roomManager.getPlayerSpellInfo(data.roomId, data.username);
+
+    if (res.status === 'not_found') {
+      sendSocketError(socket, SocketErrorSlug.NOT_FOUND, 'Комната не найдена');
+      return;
+    }
+
+    if (res.status === 'player_not_found') {
+      sendSocketError(socket, SocketErrorSlug.NOT_FOUND, 'Игрок не найден в комнате');
+      return;
+    }
+
+    if (res.status === 'error') {
+      logger.error('Ошибка при getPlayerSpellInfo:', res.error);
+      sendSocketError(socket, SocketErrorSlug.INTERNAL_ERROR, 'Ошибка при получении умений');
+      return;
+    }
+
+    const params: IGetSpellsResponse = {
+      username: data.username,
+      spells: res.spells,
+    };
+
+    socket.emit(ServerToClientEvents.SPELL_INFO, params);
   });
 
   socket.on(ClientToServerEvents.DISCONNECT, () => {
