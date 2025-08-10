@@ -4,6 +4,7 @@ export enum ClientToServerEvents {
   GET_PLAYERS = 'getPlayers',
   CHANGE_PLAYER_READY = 'changePlayerReady',
   CHOOSING_CATEGORY = 'choosingCategory',
+  GET_QUESTIONS = 'getQuestions',
 
   DISCONNECT = 'disconnect',
 }
@@ -15,6 +16,7 @@ export enum ServerToClientEvents {
   START_GAME = 'startGame',
   GAME_OVER = 'gameOver',
   CATEGORY_TURN = 'categoryTurn',
+  NEW_QUESTION = 'newQuestion',
 
   ERROR = 'error',
 }

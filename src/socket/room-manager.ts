@@ -1,4 +1,5 @@
 import { GameRoom, GameState, IPlayer } from './types/game-types.js';
+import { getAllCategories } from '../modules/category/category-service.js';
 
 const RECONNECT_TTL = 120000;
 
@@ -16,6 +17,9 @@ class RoomManager {
       questionOrder: undefined,
       currentQuestion: undefined,
       totalQuestions: undefined,
+      chooserQueue: [],
+      usedCategories: [],
+      usedQuestionIds: [],
     };
     this.cleanupTimers[roomId] = {};
     return true;
@@ -162,6 +166,10 @@ class RoomManager {
       clearTimeout(t);
       delete this.cleanupTimers[roomId][usernameKey];
     }
+  }
+
+  async getAllCategories() {
+    return await getAllCategories();
   }
 
   deleteRoom(roomId: string) {

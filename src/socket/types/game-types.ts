@@ -22,4 +22,9 @@ export interface GameRoom {
   questionOrder?: string[];
   currentQuestion?: number;
   totalQuestions?: number;
+
+  chooserQueue: string[];
+  usedCategories: number[];
+
+  usedQuestionIds: number[];
 }

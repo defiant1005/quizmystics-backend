@@ -11,13 +11,19 @@ import {
   IClientServerParams,
   ICreateRoomParams,
   IGetPlayersParams,
+  IGetQuestionsParams,
   IInterRoomParams,
 } from './types/client-server-response-types.js';
 import {
+  ICategoryTurnResponse,
+  IGameQuestion,
   IRoomCreatedResponse,
   ISuccessEnterResponse,
   IUpdatePlayersResponse,
 } from './types/server-client-response-types.js';
+import { shuffleArray } from './utils/shuffle-array.js';
+import { getRandomQuestionByCategory } from '../modules/question/question-service.js';
+import { AnswerVariant } from '../modules/question/types.js';
 
 export const socketHandler = (socket: Socket) => {
   logger.info(`🔌 Новый клиент: ${socket.id}`);
@@ -187,54 +193,87 @@ export const socketHandler = (socket: Socket) => {
     }
   });
 
-  socket.on(ClientToServerEvents.CHOOSING_CATEGORY, (data: IClientServerParams) => {
-    if (!data.roomId) {
-      sendSocketError(socket, SocketErrorSlug.VALIDATE_ERROR, 'Что-то пошло не так');
-      return;
-    }
-
+  socket.on(ClientToServerEvents.CHOOSING_CATEGORY, async (data: IClientServerParams) => {
     const room = roomManager.getRoom(data.roomId);
+
     if (!room) {
       sendSocketError(socket, SocketErrorSlug.NOT_FOUND, 'Комната не найдена');
       return;
     }
 
-    if (!room.questionOrder || room.questionOrder.length === 0) {
-      const initRes = roomManager.initQuestionOrder(data.roomId, 12);
-      if (initRes.status !== 'ok') {
-        if (initRes.status === 'not_enough_players') {
-          sendSocketError(socket, SocketErrorSlug.NOT_ENOUGH_PLAYERS, 'Недостаточно игроков для начала игры');
-        } else {
-          sendSocketError(socket, SocketErrorSlug.INTERNAL_ERROR, 'Не удалось сформировать порядок вопросов');
-        }
-        return;
-      }
+    if (!room.chooserQueue || room.chooserQueue.length === 0) {
+      room.chooserQueue = shuffleArray(Object.keys(room.players));
+    }
+    const chooserId = room.chooserQueue.shift()!;
+    const chooser = room.players[chooserId];
+
+    const allCategories = await roomManager.getAllCategories();
+    if (!room.usedCategories) {
+      room.usedCategories = [];
     }
 
-    room.currentQuestion = room.currentQuestion ?? 0;
-    room.totalQuestions = room.totalQuestions ?? 12;
+    let available = allCategories.filter((c) => !room.usedCategories.includes(c.id));
 
-    const chooserRes = roomManager.getCurrentChooser(data.roomId);
-    if (chooserRes.status === 'finished') {
-      room.state = GameState.ENDED;
-      socket.emit(ServerToClientEvents.GAME_OVER, { roomId: data.roomId });
-      socket.to(data.roomId).emit(ServerToClientEvents.GAME_OVER, { roomId: data.roomId });
-      return;
-    }
-    if (chooserRes.status !== 'ok') {
-      sendSocketError(socket, SocketErrorSlug.INTERNAL_ERROR, 'Не удалось определить выбирающего');
-      return;
+    if (available.length < 4) {
+      room.usedCategories = [];
+      available = allCategories;
     }
 
-    const payload = {
-      roomId: data.roomId,
-      index: chooserRes.index,
-      total: room.totalQuestions,
-      chooser: chooserRes.chooser,
+    const chosenCategories = shuffleArray(available).slice(0, 4);
+
+    room.usedCategories.push(...chosenCategories.map((c) => c.id));
+
+    const payload: ICategoryTurnResponse = {
+      chooser: chooser.username,
+      categories: chosenCategories.map((c) => {
+        return {
+          id: c.id,
+          title: c.title,
+        };
+      }),
     };
 
-    socket.emit(ServerToClientEvents.CATEGORY_TURN, payload);
     socket.to(data.roomId).emit(ServerToClientEvents.CATEGORY_TURN, payload);
+    socket.emit(ServerToClientEvents.CATEGORY_TURN, payload);
+  });
+
+  socket.on(ClientToServerEvents.GET_QUESTIONS, async (data: IGetQuestionsParams) => {
+    const room = roomManager.getRoom(data.roomId);
+
+    if (!room) {
+      sendSocketError(socket, SocketErrorSlug.NOT_FOUND, 'Комната не найдена');
+      return;
+    }
+
+    const { categoryId } = data;
+    if (!categoryId) {
+      sendSocketError(socket, SocketErrorSlug.VALIDATE_ERROR, 'Не передан categoryId');
+      return;
+    }
+
+    if (!room.usedQuestionIds) {
+      room.usedQuestionIds = [];
+    }
+
+    const question = await getRandomQuestionByCategory(categoryId, room.usedQuestionIds);
+
+    if (!question) {
+      sendSocketError(socket, SocketErrorSlug.NOT_FOUND, 'Вопросы в этой категории закончились');
+      return;
+    }
+
+    room.usedQuestionIds.push(question.id);
+
+    const newQuestionParams: IGameQuestion = {
+      title: question.title,
+      answer1: question[AnswerVariant.ANSWER1],
+      answer2: question[AnswerVariant.ANSWER2],
+      answer3: question[AnswerVariant.ANSWER3],
+      answer4: question[AnswerVariant.ANSWER4],
+    };
+
+    socket.emit(ServerToClientEvents.NEW_QUESTION, newQuestionParams);
+    socket.to(data.roomId).emit(ServerToClientEvents.NEW_QUESTION, newQuestionParams);
   });
 
   socket.on(ClientToServerEvents.DISCONNECT, () => {

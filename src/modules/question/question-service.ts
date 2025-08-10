@@ -1,5 +1,6 @@
 import { Question } from './question-db-model.js';
 import { IQuestionCreationAttributes } from './types.js';
+import { Op } from 'sequelize';
 
 export const createQuestion = async (data: IQuestionCreationAttributes) => {
   return await Question.create(data);
@@ -28,4 +29,19 @@ export const deleteQuestion = async (id: number) => {
   }
   await question.destroy();
   return question;
+};
+
+export const getRandomQuestionByCategory = async (categoryId: number, excludeIds: number[] = []) => {
+  const where: any = { categoryId };
+  if (excludeIds.length > 0) {
+    where.id = { [Op.notIn]: excludeIds };
+  }
+
+  const questions = await Question.findAll({ where });
+  if (questions.length === 0) {
+    return null;
+  }
+
+  const randomIndex = Math.floor(Math.random() * questions.length);
+  return questions[randomIndex];
 };

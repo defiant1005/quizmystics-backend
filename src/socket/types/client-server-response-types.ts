@@ -18,3 +18,7 @@ export interface IChangePlayerReadyParams extends IClientServerParams {
   isReady: boolean;
   username: string;
 }
+
+export interface IGetQuestionsParams extends IClientServerParams {
+  categoryId: number;
+}
